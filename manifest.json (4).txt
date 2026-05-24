@@ -1,0 +1,21 @@
+{
+  "short_name": "روايات چني",
+  "name": "تطبيق لروايات من الديلر خاص بجني صلاح، غير مسموح التداول ",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/Genie Novels App/",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "orientation": "portrait"
+}

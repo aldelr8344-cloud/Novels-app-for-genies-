@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ÄḶ.ḊЁḶṚ</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="manifest" href="./manifest.json">
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --crimson: #BE00E1;
+  --crimson2: #009622;
+  --gold: #F4C2C2;
+  --gold2: #DCAE96;
+  --forest: #4B3D00;
+  --forest2: #7C6505;
+  --black: #000000;
+  --white: #FAF9F6;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: 'Tajawal', sans-serif;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #050505; }
+::-webkit-scrollbar-thumb { background: var(--crimson); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+/* ========== WELCOME OVERLAY ========== */
+#welcome-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--black);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 1.2s ease;
+}
+#welcome-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+.welcome-logo {
+  font-family: 'Cinzel Decorative', cursive;
+  font-size: clamp(2.5rem, 8vw, 6rem);
+  background: linear-gradient(90deg, var(--crimson), var(--gold), var(--forest2), var(--crimson));
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: flowColors 3s ease-in-out infinite;
+}
+@keyframes flowColors {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ========== HERO ========== */
+#hero {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1600&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+#hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(8,8,8,0.5) 0%,
+    rgba(60,0,0,0.2) 50%,
+    rgba(8,8,8,0.85) 100%
+  );
+}
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+.main-title {
+  font-family: 'Cinzel Decorative', cursive;
+  font-size: clamp(3rem, 10vw, 9rem);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  background: linear-gradient(90deg, var(--crimson), var(--gold), var(--forest2), var(--gold2), var(--crimson));
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: flowColors 5s ease-in-out infinite;
+  filter: drop-shadow(0 0 35px rgba(201,168,76,0.35));
+}
+.hero-tagline {
+  margin-top: 1.2rem;
+  color: rgba(201,168,76,0.55);
+  font-size: 0.95rem;
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+  font-weight: 300;
+}
+
+/* ========== CIRCLE SECTION ========== */
+#circle-section {
+  background: linear-gradient(180deg, var(--black) 0%, #0d0404 100%);
+  padding: 7rem 2rem 5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.circle-wrap {
+  position: relative;
+  cursor: pointer;
+  width: 220px;
+  height: 220px;
+}
+
+.circle-img {
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 5px solid transparent;
+  animation: rotateSlow 10s linear infinite;
+  position: relative;
+  z-index: 1;
+}
+
+.circle-wrap::before {
+  content: '';
+  position: absolute;
+  top: -10px; left: -10px; right: -10px; bottom: -10px;
+  border-radius: 50%;
+  background: linear-gradient(var(--crimson), var(--gold), var(--forest2), var(--crimson));
+  background-size: 400%;
+  z-index: 0;
+  filter: blur(15px);
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+/* تحويل الأنميشن المعقد ليعمل بكامل قوته عند التفاعل لراحة المعالج */
+.circle-wrap:hover::before {
+  opacity: 1;
+  animation: neonGlow 10s linear infinite;
+}
+
+@keyframes rotateSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes neonGlow {
+  0%   { background-position: 0 0; }
+  50%  { background-position: 400% 0; }
+  100% { background-position: 0 0; }
+}
+
+.circle-wrap:active { transform: scale(0.95); }
+
+.ring-svg { display: none; }
+
+.circle-hint {
+  font-size: 0.88rem;
+  color: rgba(201,168,76,0.5);
+  letter-spacing: 0.2em;
+  text-align: center;
+}
+
+#circle-reveal {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.8s ease, opacity 0.8s ease, margin 0.4s;
+  text-align: center;
+  color: var(--gold2);
+  font-size: 1.05rem;
+  font-style: italic;
+  padding: 0 2rem;
+}
+#circle-reveal.open {
+  max-height: 150px;
+  opacity: 1;
+  margin-top: 0.5rem;
+}
+
+/* ========== GLASS SECTION ========== */
+#glass-section {
+  background: #0d0404;
+  padding: 4rem 2rem 6rem;
+  display: flex;
+  justify-content: center;
+}
+
+.glass-card {
+  position: relative;
+  max-width: 760px;
+  width: 100%;
+  border-radius: 16px;
+  padding: 3rem 3.5rem;
+  background: rgba(12, 5, 5, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* spinning gradient border */
+.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 18px;
+  background: conic-gradient(
+    from 0deg,
+    var(--crimson),
+    var(--gold),
+    var(--forest2),
+    var(--gold2),
+    var(--crimson2),
+    var(--crimson)
+  );
+  z-index: -1;
+  animation: spinBorder 5s linear infinite;
+}
+.glass-card::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 15px;
+  background: rgba(10, 4, 4, 0.82);
+  backdrop-filter: blur(20px);
+  z-index: -1;
+}
+
+@keyframes spinBorder {
+  0%   { filter: hue-rotate(0deg) brightness(1.2); }
+  50%  { filter: hue-rotate(30deg) brightness(1.5); }
+  100% { filter: hue-rotate(0deg) brightness(1.2); }
+}
+
+.glass-text {
+  font-size: 1.15rem;
+  line-height: 2.2;
+  color: var(--white);
+  text-align: center;
+  min-height: 5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.type-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  background: var(--gold);
+  vertical-align: middle;
+  margin-right: 3px;
+  animation: cursorBlink 0.75s step-end infinite;
+}
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ========== BUTTONS SECTION ========== */
+#buttons-section {
+  background: linear-gradient(180deg, #0d0404 0%, #080808 100%);
+  padding: 5rem 2rem 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.section-heading {
+  font-family: 'Cinzel Decorative', cursive;
+  font-size: 1.2rem;
+  color: var(--gold);
+  letter-spacing: 0.25em;
+  text-align: center;
+}
+
+.btn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1rem;
+  max-width: 920px;
+  width: 100%;
+}
+
+.nav-btn {
+  background: rgba(8, 3, 3, 0.6);
+  border: 2px solid var(--gold);
+  border-radius: 8px;
+  color: var(--gold);
+  font-family: 'Tajawal', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 1.1rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  letter-spacing: 0.06em;
+  box-shadow: 0 0 5px var(--gold), 0 0 25px rgba(201,168,76,0.3);
+}
+.nav-btn:hover {
+  color: var(--white);
+  border-color: var(--crimson);
+  box-shadow:
+    0 0 5px var(--crimson),
+    0 0 25px var(--crimson),
+    0 0 60px rgba(139,0,0,0.5),
+    0 0 120px rgba(139,0,0,0.3);
+  transform: translateY(-3px);
+}
+.nav-btn:active { transform: scale(0.97); }
+
+/* ========== TOAST ========== */
+#toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: linear-gradient(135deg, rgba(100,0,0,0.95), rgba(20,50,30,0.95));
+  border: 1px solid rgba(201,168,76,0.6);
+  border-radius: 14px;
+  color: var(--white);
+  padding: 1.3rem 2.5rem;
+  font-size: 1.05rem;
+  z-index: 9999;
+  backdrop-filter: blur(14px);
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s;
+  text-align: center;
+  max-width: 380px;
+  width: 90%;
+  box-shadow: 0 0 40px rgba(139,0,0,0.5), 0 0 80px rgba(139,0,0,0.2);
+  opacity: 0;
+  pointer-events: none;
+}
+#toast.show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ========== STICKY TITLE ========== */
+#sticky-title {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  text-align: center;
+  padding: 0.6rem 1rem;
+  background: rgba(8,8,8,0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(201,168,76,0.1);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+#sticky-title.visible { opacity: 1; }
+#sticky-title .sticky-text {
+  font-family: 'Cinzel Decorative', cursive;
+  font-size: 1.1rem;
+  background: linear-gradient(90deg, var(--crimson), var(--gold), var(--forest2));
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: flowColors 4s ease-in-out infinite;
+  letter-spacing: 0.1em;
+}
+
+/* ========== FOOTER ========== */
+footer {
+  background: #040404;
+  border-top: 1px solid rgba(201,168,76,0.12);
+  padding: 3.5rem 2rem;
+  text-align: center;
+}
+.footer-ornament {
+  color: rgba(139,0,0,0.5);
+  font-size: 1.2rem;
+  letter-spacing: 0.6em;
+  margin-bottom: 1.5rem;
+}
+.footer-body {
+  color: rgba(201,168,76,0.45);
+  font-size: 0.92rem;
+  line-height: 2.2;
+  letter-spacing: 0.04em;
+}
+.footer-brand {
+  font-family: 'Cinzel Decorative', cursive;
+  color: var(--gold);
+  font-size: 0.95rem;
+}
+</style>
+</head>
+<body>
+
+<!-- Sticky Title -->
+<div id="sticky-title">
+  <span class="sticky-text">ÄḶ.ḊЁḶṚ</span>
+</div>
+
+<!-- Welcome Overlay -->
+<div id="welcome-overlay">
+  <div class="welcome-logo">ÄḶ.ḊЁḶṚ</div>
+</div>
+
+<!-- Hidden Audio -->
+<audio id="bgAudio" loop>
+  <source src="https://files.catbox.moe/aolqiy.mp3" type="audio/mpeg">
+</audio>
+
+<!-- ===== HERO ===== -->
+<section id="hero">
+  <div class="hero-inner">
+    <h1 class="main-title">ÄḶ.ḊЁḶṚ</h1>
+    <p class="hero-tagline">✦ عالم من الكلمات ✦</p>
+  </div>
+</section>
+
+<!-- ===== CIRCLE ===== -->
+<section id="circle-section">
+  <div class="circle-wrap" onclick="circleClick()" title="اضغط">
+    <img
+      class="circle-img"
+      id="circleImg"
+      src="https://files.catbox.moe/k76xjt.jpg"
+      alt="circle image"
+    >
+    <svg class="ring-svg" viewBox="0 0 250 250" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <path id="ringPath" d="M 125,125 m -100,0 a 100,100 0 1,1 200,0 a 100,100 0 1,1 -200,0"/>
+      </defs>
+      <text fill="none">
+        <textPath href="#ringPath" style="fill:#C9A84C;font-size:11px;letter-spacing:4px;font-family:Tajawal,sans-serif;">
+          ✦ ÄḶ.ḊЁḶṚ ✦ اضغط لتسمع ✦ ÄḶ.ḊЁḶṚ ✦ اضغط لتسمع ✦
+        </textPath>
+      </text>
+    </svg>
+  </div>
+
+  <p class="circle-hint">✨دوسي على الصوره ي مزه 🙈✨</p>
+  <div id="circle-reveal">
+    دٍيِّ أّغُلَيِّ هّـدٍيِّهّـ لَأّغُلَيِّ حًدٍ عٌلَيِّأّ کْدٍأّ کْدٍأّ وٌربًنِأّ يِّدٍيِّمًکْ فُـيِّ حًيِّأّتٌـيِّ يِّ چِـنِچِـوٌنِهّـ
+  </div>
+</section>
+
+<!-- ===== GLASS ===== -->
+<section id="glass-section">
+  <div class="glass-card">
+    <div class="glass-text">
+      <span id="typedText"></span><span class="type-cursor"></span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BUTTONS ===== -->
+<section id="buttons-section">
+  <h2 class="section-heading">✦اختاري الروايه الى هتبدئي بيها ي قمر  🙈 🧸✦</h2>
+  <div class="btn-grid" id="btnGrid"></div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="footer-ornament">— ✦ —</div>
+  <div class="footer-body">
+    بس كدا ي ست البنات<br>
+    لو احتجتي حاجه كلمني ي قزحه<br><br>
+    جميع الحقوق محفوظه للــ
+    <span class="footer-brand">『 ÄḶ.ḊЁḶṚ 』</span>
+    © 2026
+  </div>
+</footer>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+
+<script>
+// ===== WELCOME OVERLAY =====
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const overlay = document.getElementById('welcome-overlay');
+    overlay.classList.add('fade-out');
+    setTimeout(() => {
+      overlay.remove();
+      startTypewriter();
+    }, 1200);
+  }, 1800);
+});
+
+// ===== TYPEWRITER =====
+const lines = [
+  'أهلاً بيكِ في عالمكِ السحري يا ست البنات ! 🌟👋🔥',
+  'يا چني يا أجدع چنچونه في الدنيا.. الروايات دي معمولة مخصوص عشانكِ ي قمر 🙈 📖 دايماً 🎒',
+  'أحلى قمر وقزحتي الملونة اللي بتنور أيامنا.. اضحكي وفكي كده 🌈✨  🧸',
+  'عارف إن تالتة ثانوي فرماكي😂.. بس الروايات دي هنا عشان تفصلي وتجددي طاقتكِ 📚💪 🚀',
+  'دائماً في ضهركِ يا ست البنات .. الحكايات هنا بتبدأ ومبتنتهيش معاكِ مزه 🪄🍿🎉'
+];
+
+
+let li = 0, ci = 0, deleting = false;
+
+function startTypewriter() {
+  const el = document.getElementById('typedText');
+  if (!el) return;
+  const line = lines[li];
+
+  if (!deleting) {
+    el.textContent = line.substring(0, ++ci);
+    if (ci === line.length) {
+      deleting = true;
+      setTimeout(startTypewriter, 2500);
+      return;
+    }
+  } else {
+    el.textContent = line.substring(0, --ci);
+    if (ci === 0) {
+      deleting = false;
+      li = (li + 1) % lines.length;
+    }
+  }
+  setTimeout(startTypewriter, deleting ? 38 : 72);
+}
+
+// ===== CIRCLE & AUDIO & PWA TRIGGER =====
+let revealed = false;
+
+function circleClick() {
+  const audio = document.getElementById('bgAudio');
+  const reveal = document.getElementById('circle-reveal');
+  const img = document.getElementById('circleImg');
+
+  if (audio.paused) {
+    audio.play().catch((err) => { console.log("Audio play blocked: ", err); });
+    img.style.animationDuration = '5s';
+  } else {
+    audio.pause();
+    img.style.animationDuration = '4s';
+  }
+
+  if (!revealed) {
+    reveal.classList.add('open');
+    revealed = true;
+  }
+
+  // استدعاء نافذة التثبيت تلقائياً لما تضغط على الصورة
+  triggerInstall();
+}
+
+// ===== DYNAMIC BUTTONS ENGINE =====
+const pages = [
+  { label: '📖 الرواية الأولى',    page: 'novel1.html'  },
+  { label: '📖 الرواية الثانية',   page: 'novel2.html'  },
+  { label: '📖 الرواية الثالثة',   page: 'novel3.html'  },
+  { label: '📖 الرواية الرابعة',   page: 'novel4.html'  },
+  { label: '📖 الرواية الخامسة',   page: 'novel5.html'  },
+  { label: '📖 الرواية السادسة',   page: 'novel6.html'  },
+  { label: '📖 الرواية السابعة',   page: 'novel7.html'  },
+  { label: '📖 الرواية الثامنة',   page: 'novel8.html'  },
+  { label: '📖 الرواية التاسعة',   page: 'novel9.html'  },
+  { label: '📖 الرواية العاشرة',   page: 'novel10.html' },
+];
+
+const grid = document.getElementById('btnGrid');
+const fragment = document.createDocumentFragment();
+
+pages.forEach(p => {
+  const btn = document.createElement('button');
+  btn.className = 'nav-btn';
+  btn.textContent = p.label;
+  btn.addEventListener('click', () => {
+    showToast(`✦ جاري الانتقال إلى ${p.label} ...`);
+    setTimeout(() => { window.location.href = p.page; }, 1800);
+  });
+  fragment.appendChild(btn);
+});
+grid.appendChild(fragment);
+
+// ===== STICKY TITLE ON SCROLL =====
+const hero = document.getElementById('hero');
+const stickyTitle = document.getElementById('sticky-title');
+const observer = new IntersectionObserver(([entry]) => {
+  stickyTitle.classList.toggle('visible', !entry.isIntersecting);
+}, { threshold: 0 });
+observer.observe(hero);
+
+// ===== TOAST =====
+function showToast(msg, dur = 2600) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ===== RETURN MESSAGE =====
+if (document.referrer && pages.some(p => document.referrer.includes(p.page.replace('.html','')))) {
+  setTimeout(() => showToast('✦ أهلاً بعودتك إلى ÄḶ.ḊЁḶṚ ✦'), 600);
+}
+
+// ===== SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('Service Worker Registered!'))
+      .catch((err) => console.log('Service Worker Failed', err));
+  });
+}
+
+// ===== PWA INSTALL ENGINE =====
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // منع المتصفح من إظهار شريط التثبيت التلقائي الافتراضي القديم
+  e.preventDefault();
+  // حفظ الحدث عشان نشغله براحتنا
+  deferredPrompt = e;
+  
+  // إظهار التوست أول ما المتصفح يكتشف إن الموقع جاهز للتثبيت
+  if(typeof showToast === 'function') {
+    showToast('✨ قزحة! تقدري تثبتي الروايات على شاشتك دلوقتي 📱', 5000);
+  }
+});
+
+function triggerInstall() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      }
+      deferredPrompt = null;
+    });
+  }
+}
+</script>
+</body>
+</html>

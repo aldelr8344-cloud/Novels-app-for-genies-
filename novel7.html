@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>قارئ الروايات — البوابة الزرقا</title>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --neon-pink: #ff2;
+      --neon-pink-glow: #FFFB00;
+      --neon-pink-light: #DAFF00;
+    }
+
+    html, body { min-height: 100vh; font-family: 'Tajawal', sans-serif; }
+
+    body {
+      background: #0a050a;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(120, 0, 80, 0.18) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(60, 0, 100, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 60% 80%, rgba(80, 0, 60, 0.12) 0%, transparent 50%);
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("https://files.catbox.moe/pk72vz.jpg");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ═══════════════════════════════════
+       VIEW 1 — الصفحة الرئيسية
+    ═══════════════════════════════════ */
+    #view-main {
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px 60px;
+    }
+    #view-main.active { display: flex; }
+
+    .profile-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 36px;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      width: 130px;
+      height: 130px;
+      cursor: pointer;
+      margin-bottom: 14px;
+    }
+
+    .avatar-wrap img {
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      position: relative;
+      z-index: 2;
+      transition: transform 0.4s ease;
+    }
+    .avatar-wrap:hover img { transform: scale(1.06); }
+
+    .avatar-ring {
+      position: absolute; inset: -5px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--neon-pink) 0deg, transparent 80deg,
+        var(--neon-pink-light) 160deg, transparent 240deg,
+        var(--neon-pink) 360deg
+      );
+      animation: spin 3s linear infinite;
+      z-index: 1;
+    }
+    .avatar-ring::after {
+      content: '';
+      position: absolute; inset: 4px;
+      border-radius: 50%;
+      background: #0a050a;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .avatar-glow {
+      position: absolute; inset: -15px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--neon-pink-glow) 0%, transparent 70%);
+      animation: pulse-glow 2s ease-in-out infinite alternate;
+      z-index: 0;
+    }
+    @keyframes pulse-glow {
+      from { opacity: 0.5; transform: scale(0.95); }
+      to   { opacity: 1;   transform: scale(1.05); }
+    }
+
+    .avatar-msg {
+      position: absolute;
+      bottom: -52px; left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      background: rgba(10,5,25,0.92);
+      border: 1px solid #000000;
+      color: #000000;
+      font-size: 13px;
+      white-space: nowrap;
+      padding: 7px 16px;
+      border-radius: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      box-shadow: 0 0 14px #FFFB00;
+      z-index: 10;
+    }
+    .avatar-msg.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .novel-title-area {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .novel-main-title {
+      font-family: 'Tajawal', sans-serif;
+      font-size: clamp(26px, 6vw, 42px);
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 0 30px var(--neon-pink-glow), 0 0 60px #FFFB00;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    .novel-subtitle {
+      font-family: 'Tajawal', sans-serif;
+      font-size: clamp(13px, 2.5vw, 16px);
+      color: #FFFB00;
+      font-weight: 400;
+      letter-spacing: 3px;
+    }
+
+    .main-card {
+      background: rgba(10, 10, 15, 0.75);
+      backdrop-filter: blur(18px) saturate(1.4);
+      -webkit-backdrop-filter: blur(18px) saturate(1.4);
+      border: 1px solid rgba(255, 45, 155, 0.22);
+      border-radius: 20px;
+      width: 100%; max-width: 640px;
+      padding: 36px 28px 30px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+    }
+
+    .card-title {
+      text-align: center;
+      color: #f0e6ff;
+      font-size: clamp(16px, 3.5vw, 20px);
+      font-weight: 700;
+      margin-bottom: 28px;
+      text-shadow: 0 0 20px var(--neon-pink-glow);
+    }
+
+    .buttons-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .fall-btn {
+      position: relative;
+      padding: 0; border: none; background: none;
+      cursor: pointer; outline: none;
+      font-family: 'Tajawal', sans-serif;
+      width: 100%;
+    }
+
+    .fall-btn .btn-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      padding: 14px 22px;
+      font-size: clamp(13px, 2.5vw, 16px);
+      font-weight: 700;
+      color: #FFFB00;
+      background: linear-gradient(135deg, #1a0a1e 0%, #0f0515 100%);
+      border-radius: 12px;
+      border: 1.5px solid #FFFB00;
+      box-shadow: 0 0 8px #B8B611, inset 0 1px 0 #FFFB00;
+      transform: translateY(-4px);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s;
+      text-align: right;
+    }
+    .fall-btn .btn-num {
+      font-size: 11px;
+      color: #C3C118;
+      font-weight: 400;
+      margin-right: auto;
+    }
+    .fall-btn .btn-preview {
+      display: block;
+      font-size: 11px;
+      color: #FFFB00;
+      font-weight: 400;
+      margin-top: 3px;
+    }
+    .fall-btn .btn-text-wrap { text-align: right; flex: 1; }
+    .fall-btn::after {
+      content: '';
+      display: block;
+      position: absolute;
+      bottom: 0; left: 6px; right: 6px; height: 8px;
+      background: #FFFB00;
+      border-radius: 0 0 12px 12px;
+      z-index: -1;
+    }
+    .fall-btn:hover .btn-top {
+      transform: translateY(-2px);
+      box-shadow: 0 0 20px #BDBA17, inset 0 1px 0 rgba(255,255,255,0.1);
+      border-color: #E3DF11;
+    }
+    .fall-btn:active .btn-top {
+      transform: translateY(0);
+      box-shadow: 0 0 6px #FFFB00;
+    }
+
+    .chapter-msg {
+      overflow: hidden; max-height: 0; opacity: 0;
+      transition: max-height 0.5s ease, opacity 0.4s ease, padding 0.3s ease;
+      text-align: center;
+    }
+    .chapter-msg.show { max-height: 80px; opacity: 1; padding: 12px 0 4px; }
+    .chapter-msg span {
+      display: inline-block;
+      background: rgba(255,45,155,0.10);
+      border: 1px solid #FFFB00;
+      border-radius: 30px;
+      padding: 6px 20px;
+      color: #FFFB00;
+      font-size: 13px;
+    }
+
+    /* ═══════════════════════════════════
+       VIEW 2 — صفحة الفصل
+    ═══════════════════════════════════ */
+    #view-chapter {
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    .top-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8, 3, 20, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid #FFFB00;
+      padding: 13px 24px;
+      text-align: center;
+    }
+
+    .chapter-label {
+      color: #e8d8f8;
+      font-size: clamp(14px, 3vw, 18px);
+      font-weight: 700;
+      text-shadow: 0 0 16px #FFFB00;
+    }
+
+    .chapter-body {
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px 120px;
+    }
+
+    .reading-card {
+      width: 100%; max-width: 760px;
+      background: #000000;
+      backdrop-filter: blur(20px) saturate(1.6);
+      -webkit-backdrop-filter: blur(20px) saturate(1.6);
+      border: 1px solid #FFFB00;
+      border-radius: 16px;
+      padding: clamp(28px, 5vw, 56px) clamp(22px, 5vw, 58px);
+      box-shadow: 0 8px 60px #FFFB00, 0 0 0 1px #FFFB00 inset;
+    }
+
+    .reading-card h2 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: clamp(20px, 4vw, 30px);
+      font-weight: 900;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 36px;
+      text-shadow: 0 0 24px var(--neon-pink-glow);
+      padding-bottom: 20px;
+      border-bottom: 1px solid #FFFB00;
+    }
+
+    #chapterContent {
+      font-family: 'Lateef', serif;
+      font-size: clamp(19px, 2.8vw, 24px);
+      line-height: 2.2;
+      color: rgba(235,225,245,0.93);
+      text-align: justify;
+    }
+
+    #chapterContent strong {
+      display: block;
+      font-family: 'Tajawal', sans-serif;
+      font-size: clamp(16px, 2.5vw, 20px);
+      font-weight: 800;
+      color: #FFFB00;
+      text-align: center;
+      margin: 36px 0 20px;
+      text-shadow: 0 0 16px var(--neon-pink-glow);
+      letter-spacing: 1px;
+    }
+
+    .bottom-controls {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 200;
+      background: rgba(5, 2, 15, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(255,45,155,0.15);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .ctrl-btn {
+      background: rgba(20,10,30,0.9); color: #ccc;
+      border: 1.5px solid #FFFB00; border-radius: 10px;
+      padding: 10px 24px;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .ctrl-btn:hover { background: #FFFB00; border-color: #FFFB00; color: #fff; }
+    .ctrl-btn:active { transform: scale(0.97); }
+    .ctrl-btn.music-active { border-color: #FFFB00; color: #ADAB18; background: #FFFB00; }
+
+    .music-status {
+      position: fixed;
+      bottom: 72px; left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: rgba(10,5,25,0.93);
+      border: 1px solid #FFFB00;
+      color: #FFFB00;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 13px;
+      padding: 7px 20px;
+      border-radius: 30px;
+      white-space: nowrap;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      box-shadow: 0 0 16px #FFFB00;
+      z-index: 300;
+    }
+    .music-status.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 480px) {
+      .reading-card { border-radius: 12px; }
+      .bottom-controls { gap: 10px; padding: 10px 12px; }
+      .ctrl-btn { padding: 8px 16px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="view-main" class="view active">
+
+    <div class="profile-section">
+      <div class="avatar-wrap" onclick="toggleAvatarMsg()">
+        <div class="avatar-glow"></div>
+        <div class="avatar-ring"></div>
+        <img
+          src="https://files.catbox.moe/inbpcb.jpg"
+          alt="صورة الرواية"
+          onerror="this.src='https://ui-avatars.com/api/?name=رواية&background=1a0a1e&color=ff6ec7&size=200'"
+        />
+        <div class="avatar-msg" id="avatarMsg">حب الطفوله 💘</div>
+      </div>
+    </div>
+
+    <div class="novel-title-area" style="margin-top:60px;">
+      <div class="novel-main-title">حب الطفوله 💘</div>
+      <div class="novel-subtitle">روايه رومنسيه 🤗 🫠</div>
+    </div>
+
+    <div class="main-card">
+      <div class="card-title">🔥.اختاري الفصل الى هتقرئيه ي ست البنات 🔥</div>
+      <div class="buttons-wrapper" id="chaptersButtons"></div>
+      <div class="chapter-msg" id="chapterMsg">
+        <span id="chapterMsgText"></span>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="view-chapter" class="view">
+    <div class="top-bar">
+      <span class="chapter-label" id="chapterLabel"></span>
+    </div>
+    <div class="chapter-body">
+      <div class="reading-card">
+        <h2 id="chapterTitle"></h2>
+        <div id="chapterContent"></div>
+      </div>
+    </div>
+    <div class="bottom-controls">
+      <button class="ctrl-btn" id="musicBtn" onclick="handleMusic()">♪ تشغيل موسيقى</button>
+      <button class="ctrl-btn" onclick="goBack()">← رجوع</button>
+    </div>
+    <div class="music-status" id="musicStatus"></div>
+  </div>
+
+  <script>
+    const chapters = [
+      {
+  title: 'الفصل الأول — أيام زمان',
+  preview: '🧸 مصطفى وحور... حكاية بدأت من وهما أطفال',
+  content: `<strong>— جزء أول —</strong><br/><br/>
+في شوارع مصر الجديدة القديمة، وتحت نور الشمس وقت العصر، كان دايماً في طفلين صوت ضحكهم أعلى من أي صوت حواليهم.<br/><br/>
+مصطفى... الولد الشقي اللي شعره دايماً منكوش وركبته مجروحة من الكورة والجري.<br/><br/>
+وحور... البنت الصغيرة اللي كانت تمشي وراه في كل مكان، حتى لو بتتخانق معاه كل خمس دقايق.<br/><br/>
+"مصطفى استنى!"<br/><br/>
+كان يجري وهي تجري وراه لحد ما تتعب وتقف تزعل.<br/><br/>
+فيرجع يضحك ويرجعلها تاني.<br/><br/>
+"خلاص يا نكدة تعالي."<br/><br/>
+فتضربه في كتفه وهي متضايقة، وبعد دقيقة ترجع تضحك كأن حاجة ما حصلتش.<br/><br/>
+<strong>— جزء تاني —</strong><br/><br/>
+كانوا ساكنين قصاد بعض.<br/><br/>
+باب شقتهم قدام باب شقتها.<br/><br/>
+كل يوم الصبح حور تخبط على بابه قبل المدرسة.<br/><br/>
+"يلا اتأخرنا!"<br/><br/>
+فيطلع مصطفى بسرعة وهو شايل شنطته بإيده وسندوتش في بقه.<br/><br/>
+وكان دايماً يمشي قدامها بخطوتين، ويبص وراه كل شوية يتأكد إنها ماشية.<br/><br/>
+ولو حد ضايقها في الشارع، كان يتخانق فوراً حتى لو أصغر منها.<br/><br/>
+مرة ولد شد ضفيرتها وهي راجعة من المدرسة.<br/><br/>
+مصطفى وقتها خبطه من غير تفكير واتخانق معاه لحد ما رجع البيت وشه متبهدل.<br/><br/>
+ولما أمه زعقتله، قال بمنتهى البراءة:<br/><br/>
+"كان بيضايق حور."<br/><br/>
+وحور فضلت طول اليوم تبصله بإعجاب كأنه بطل خارق.<br/><br/>
+<strong>— جزء تالت —</strong><br/><br/>
+في الصيف، كانوا يقعدوا فوق السطوح بالليل.<br/><br/>
+يشربوا عصير قصب ويحاولوا يعدوا النجوم.<br/><br/>
+حور كانت دايماً تسأل أسئلة غريبة.<br/><br/>
+"هو ينفع الناس تختفي فجأة؟"<br/><br/>
+مصطفى ضحك وقتها. "إنتي هتختفي يعني؟"<br/><br/>
+هزت كتفها الصغير. "معرفش."<br/><br/>
+بصلها شوية وقال بثقة طفل عنده 12 سنة:<br/><br/>
+"حتى لو اختفيتي... هدور عليكي."<br/><br/>
+حور ابتسمت وقتها، الابتسامة اللي فضلت محفورة جواه سنين طويلة.<br/><br/>
+<strong>— جزء رابع —</strong><br/><br/>
+بس الأيام الحلوة مبتكملش بسهولة.<br/><br/>
+في يوم، مصطفى رجع من التمرين لقى بيت حور مفتوح بطريقة غريبة، وكراكيب في الصالة، وشنط على الأرض.<br/><br/>
+دخل بسرعة وهو مستغرب.<br/><br/>
+لقى حور قاعدة على الكنبة وعينيها حمرا.<br/><br/>
+"مالك؟"<br/><br/>
+بصتله وسكتت ثواني قبل ما تقول بصوت مهزوز:<br/><br/>
+"إحنا مسافرين."<br/><br/>
+مصطفى حس إن الكلمة خبطته.<br/><br/>
+"فين؟"<br/><br/>
+"اسكندرية... بابا لقى شغل هناك."<br/><br/>
+"وهترجعوا إمتى؟"<br/><br/>
+حور هزت راسها ببطء.<br/><br/>
+"معرفش."<br/><br/>
+<strong>— جزء خامس —</strong><br/><br/>
+أول مرة مصطفى يحس بالعجز كان اليوم ده.<br/><br/>
+فضل طول الليل ساكت، مش عارف يعمل إيه.<br/><br/>
+وفي يوم السفر، وقف تحت العمارة مستني العربية تنزل.<br/><br/>
+حور نزلت وهي حضنة دبدوبها الصغير.<br/><br/>
+وقفت قدامه وسألته بهدوء:<br/><br/>
+"هتنساني؟"<br/><br/>
+مصطفى رد فوراً:<br/><br/>
+"مستحيل."<br/><br/>
+سكتت شوية، وبعدها طلعت من جيبها إسورة خيط لونها أزرق وربطتها في إيده.<br/><br/>
+"عشان تفتكرني."<br/><br/>
+قبل ما يرد، أبوها ناداها.<br/><br/>
+ركبت العربية.<br/><br/>
+والعربية اتحركت ببطء.<br/><br/>
+ومصطفى فضل واقف في الشارع يبصلها لحد ما اختفت تماماً.<br/><br/>
+ومن يومها... الشارع مبقاش زي الأول أبداً.`
+}, 
+             
+      {
+  title: 'الفصل الثاني — بعد سبع سنين',
+  preview: '🌆 مصطفى يقابل حور من جديد... لكن هي مش فاكراه',
+  content: `<strong>— جزء أول —</strong><br/><br/>
+سبع سنين كاملة عدّوا.<br/><br/>
+مصطفى كبر.<br/><br/>
+بقى عنده أربعة وعشرين سنة، اشتغل في شركة تصميم داخلي، واتغيرت فيه حاجات كتير.<br/><br/>
+بقى أهدى.<br/><br/>
+أعقل.<br/><br/>
+بس في حاجة واحدة عمرها ما اتغيرت...<br/><br/>
+إنه كل ما يشوف إسورة زرقا، يفتكر حور.<br/><br/>
+الإسورة القديمة كانت لسه في درج مكتبه، محتفظ بيها رغم إن لونها بدأ يبهت مع الوقت.<br/><br/>
+وفي بعض الليالي، كان يفتح الدرج ويبص لها دقيقة كاملة من غير ما يتكلم.<br/><br/>
+كأنه مستني حاجة ترجع.<br/><br/>
+<strong>— جزء تاني —</strong><br/><br/>
+اليوم كان عادي جداً.<br/><br/>
+الشمس قربت تغيب، ومصطفى راجع من الشغل تعبان وهو طالع سلالم العمارة القديمة.<br/><br/>
+لكن أول ما وصل لنص السلم... وقف فجأة.<br/><br/>
+باب الشقة اللي قصادهم مفتوح.<br/><br/>
+وفي صوت ضحك خفيف خارج من جوه.<br/><br/>
+قلبه دق مرة واحدة بقوة.<br/><br/>
+نفس الإحساس القديم.<br/><br/>
+نفس الرعشة اللي كان بيحسها وهو صغير أول ما يسمع صوتها.<br/><br/>
+حاول يقنع نفسه إنه بيتوهم.<br/><br/>
+لحد ما شافها.<br/><br/>
+<strong>— جزء تالت —</strong><br/><br/>
+كانت واقفة جوه الشقة، شايلة كرتونة صغيرة، وشعرها الطويل مربوط بشكل عشوائي.<br/><br/>
+كبرت.<br/><br/>
+ملامحها بقت أنعم، أهدى، بس عيونها... كانت زي ما هي.<br/><br/>
+مصطفى فضل واقف يبصلها ثواني طويلة من غير ما يتحرك.<br/><br/>
+وحور رفعت عينيها فجأة وشافته.<br/><br/>
+سكتوا هما الاتنين.<br/><br/>
+هي بصتله باستغراب بسيط، أما هو فكان حاسس إن الزمن رجع بيه مرة واحدة.<br/><br/>
+"آسفة... ممكن تساعدني؟"<br/><br/>
+صوتها خلا قلبه يدق أسرع.<br/><br/>
+قرب فوراً وخد الكرتونة من إيدها.<br/><br/>
+"أكيد."<br/><br/>
+<strong>— جزء رابع —</strong><br/><br/>
+دخل الشقة وهو شايل الحاجات، وعينيه بتلف في المكان.<br/><br/>
+كل حاجة اتغيرت.<br/><br/>
+بس ريحة البيت نفسها لسه موجودة.<br/><br/>
+ريحة الذكريات.<br/><br/>
+حور ابتسمت بخفة وقالت:<br/><br/>
+"إحنا لسه راجعين القاهرة من يومين، والبيت متبهدل خالص."<br/><br/>
+مصطفى حاول يخبي توتره. "الحمد لله على السلامة."<br/><br/>
+بصتله شوية وقالت:<br/><br/>
+"إحنا اتقابلنا قبل كده؟"<br/><br/>
+السؤال ضربه مباشرة.<br/><br/>
+ابتسم بهدوء وقال:<br/><br/>
+"زمان... من سنين."<br/><br/>
+حور حاولت تفتكر، لكن ملامحها فضلت تايهة.<br/><br/>
+"معلش ذاكرتي ضعيفة شوية."<br/><br/>
+ضحك بخفة رغم الوجع اللي حسه.<br/><br/>
+"واضح."<br/><br/>
+<strong>— جزء خامس —</strong><br/><br/>
+بالليل، مصطفى كان واقف في البلكونة كعادته.<br/><br/>
+وفجأة لمح بلكونة حور مفتوحة.<br/><br/>
+كانت واقفة هناك، ساندة على السور، وباصّة للسما.<br/><br/>
+الهواء كان بيحرك شعرها بهدوء.<br/><br/>
+وفجأة قالت من غير ما تبصله:<br/><br/>
+"حاسّة إن المكان ده أعرفه أوي."<br/><br/>
+مصطفى ابتسم بحزن بسيط.<br/><br/>
+"عشان هو كان بيتك."<br/><br/>
+سكتت شوية قبل ما تقول:<br/><br/>
+"الغريب إني حاسة إني نسيت حاجة مهمة هنا."<br/><br/>
+مصطفى بص للإسورة الزرقا اللي لسه ملفوفة حوالين إيده من سنين.<br/><br/>
+وهمس لنفسه بهدوء:<br/><br/>
+"وأنا مستنيك تفتكري."`
+}, 
+     {
+  title: 'الفصل الثالث — القرب اللي يخوف',
+  preview: '❤️ حور تبدأ تقرب من مصطفى... ومشاعر زمان ترجع واحدة واحدة',
+  content: `<strong>— جزء أول —</strong><br/><br/>
+الأيام بدأت تاخد شكل مختلف.<br/><br/>
+مصطفى بقى متعود يشوف حور كل يوم تقريباً.<br/><br/>
+مرة وهي نازلة تشتري حاجة.<br/><br/>
+مرة وهي راجعة من شغلها.<br/><br/>
+ومرات كتير من غير أي سبب واضح، كأن الدنيا كل شوية بتحطهم قدام بعض.<br/><br/>
+وحور بدأت ترتاح له بسرعة غريبة.<br/><br/>
+رغم إنها لسه مش فاكرة هو مين.<br/><br/>
+<strong>— جزء تاني —</strong><br/><br/>
+في ليلة هادية، الكهربا قطعت على العمارة كلها.<br/><br/>
+الشارع غرق في الضلمة، والناس بدأت تفتح شبابيكها وتشتكي.<br/><br/>
+مصطفى كان قاعد في البلكونة، ولما بص قدامه لقى حور واقفة لوحدها ومتوترة.<br/><br/>
+"إنتِ خايفة من الضلمة لسه؟"<br/><br/>
+حور بصتله بسرعة باستغراب.<br/><br/>
+"أنا... إزاي عرفت؟"<br/><br/>
+اتوتر للحظة.<br/><br/>
+"تخمين يعني."<br/><br/>
+فضلت تبصله شوية، وبعدها ضحكت بخفة.<br/><br/>
+"غريبة... حاسة إنك عارف عني حاجات كتير."<br/><br/>
+مصطفى ابتسم وهو مخبي وجعه.<br/><br/>
+"يمكن عشان كنتِ سهلة القراية."<br/><br/>
+<strong>— جزء تالت —</strong><br/><br/>
+تاني يوم، حور خبطت على بابه لأول مرة.<br/><br/>
+فتح الباب متفاجئ.<br/><br/>
+لقيها واقفة بكوبايتين قهوة.<br/><br/>
+"قولت بما إن الكهربا قطعت امبارح وفضلنا صاحيين... نشرب قهوة النهارده بطريقة آدمية."<br/><br/>
+ضحك مصطفى وسابها تدخل.<br/><br/>
+قعدوا يتكلموا ساعات.<br/><br/>
+عن الشغل.<br/><br/>
+عن السفر.<br/><br/>
+عن الحاجات اللي اتغيرت فيهم.<br/><br/>
+ولأول مرة من سنين، مصطفى حس إنه مرتاح.<br/><br/>
+حور كانت بتضحك بنفس الطريقة القديمة.<br/><br/>
+ونفس العادة الغريبة وهي بتلف الخاتم في صباعها لما تتوتر.<br/><br/>
+كل التفاصيل الصغيرة لسه محفورة جواه.<br/><br/>
+<strong>— جزء رابع —</strong><br/><br/>
+"هو إحنا كنا أصحاب قريبين زمان؟"<br/><br/>
+السؤال خرج منها فجأة وهي باصة لفنجان القهوة.<br/><br/>
+مصطفى سكت ثواني.<br/><br/>
+"أكتر مما تتخيلي."<br/><br/>
+رفعت عينيها له بهدوء.<br/><br/>
+"طب ليه حاساك زعلان إني مش فاكرة؟"<br/><br/>
+ابتسم ابتسامة صغيرة.<br/><br/>
+"عشان في ناس... صعب تتنسي."<br/><br/>
+قلب حور دق للحظة بطريقة غريبة.<br/><br/>
+وحاولت تهرب من نظراته بسرعة.<br/><br/>
+<strong>— جزء خامس —</strong><br/><br/>
+بعدها بأيام، نزلوا يتمشوا سوا بالليل.<br/><br/>
+القاهرة كانت هادية بشكل نادر، والهوا بارد شوية.<br/><br/>
+حور كانت بتحكي عن حياتها في اسكندرية، ومصطفى سامعها بابتسامة طول الوقت.<br/><br/>
+وفجأة وقفت قدام محل لعب قديم.<br/><br/>
+بصت للدبدوب المعروض في الواجهة وسكتت.<br/><br/>
+"إيه؟"<br/><br/>
+قالتها وهي مركزة في اللعبة:<br/><br/>
+"حاسّة إن حد كان جايبلي واحد شبهه زمان."<br/><br/>
+مصطفى قلبه انقبض.<br/><br/>
+لأنه هو اللي كان جايبهولها في عيد ميلادها وهي عندها عشر سنين.<br/><br/>
+<strong>— جزء سادس —</strong><br/><br/>
+في اللحظة دي، بدأ يحس بالخوف.<br/><br/>
+الخوف من إنها تفتكر فجأة.<br/><br/>
+والخوف الأكبر... إنها تفتكر ومتحسش بنفس اللي حاسه.<br/><br/>
+لكن قبل ما يفكر أكتر، حور بصتله فجأة وقالت:<br/><br/>
+"مصطفى؟"<br/><br/>
+"همم؟"<br/><br/>
+ابتسمت بهدوء لأول مرة بالشكل ده.<br/><br/>
+"أنا مبسوطة إننا اتقابلنا."<br/><br/>
+وفي اللحظة دي، عرف إن قلبه بدأ يضيع منها من جديد.`
+}, 
+      {
+  title: 'الفصل الرابع — الحقيقة اللي كانت مستخبية',
+  preview: '💔 حور تكتشف الحقيقة... ومصطفى يخاف يخسرها من جديد',
+  content: `<strong>— جزء أول —</strong><br/><br/>
+العلاقة بينهم بدأت تقرب أكتر من أي وقت.<br/><br/>
+بقى طبيعي إن حور تبعتله أول ما تصحى.<br/><br/>
+وطبيعي إنه يستناها تحت العمارة عشان يروحوا سوا.<br/><br/>
+حتى أم مصطفى بدأت تلاحظ.<br/><br/>
+"البنت دي رجعتلك الروح يا مصطفى."<br/><br/>
+كان يضحك ويسكت.<br/><br/>
+لأنه لأول مرة من سنين... كان حاسس إنه عايش فعلاً.<br/><br/>
+<strong>— جزء تاني —</strong><br/><br/>
+لكن كل ما قرب منها أكتر، كل ما خوفه زاد.<br/><br/>
+الخوف من اللحظة اللي تعرف فيها الحقيقة كاملة.<br/><br/>
+إنه عمره ما نسيها.<br/><br/>
+وإنه كان مستنيها طول السنين دي.<br/><br/>
+وفي يوم، وهو في الشغل، جاتله رسالة منها:<br/><br/>
+"ممكن أعدي عليك؟"<br/><br/>
+ابتسم فوراً ورد:<br/><br/>
+"تعالي."<br/><br/>
+ماكانش يعرف إن اليوم ده هيغير كل حاجة.<br/><br/>
+<strong>— جزء تالت —</strong><br/><br/>
+حور وصلت شقته وهو لسه مخلص شغل على اللابتوب.<br/><br/>
+دخلت وهي بتتكلم كعادتها، لكن فجأة سكتت.<br/><br/>
+كانت واقفة قدام المكتب.<br/><br/>
+وباصّة على حاجة معينة.<br/><br/>
+الإسورة الزرقا.<br/><br/>
+مصطفى حس بقلبه يقع.<br/><br/>
+نسي يحطها في الدرج.<br/><br/>
+حور قربت منها ببطء، ومسكتها بين صوابعها.<br/><br/>
+وعيونها بدأت تتغير.<br/><br/>
+"الإسورة دي..."<br/><br/>
+مصطفى ما ردش.<br/><br/>
+وفجأة، الذكريات ضربتها مرة واحدة.<br/><br/>
+السطوح.<br/><br/>
+الشارع.<br/><br/>
+المدرسة.<br/><br/>
+الولد اللي كان بيتخانق عشانها.<br/><br/>
+والوعد القديم.<br/><br/>
+"حتى لو اختفيتي... هدور عليكي."<br/><br/>
+<strong>— جزء رابع —</strong><br/><br/>
+حور رفعت عينيها له بصدمة.<br/><br/>
+"إنت... مصطفى؟"<br/><br/>
+ابتسم بحزن بسيط.<br/><br/>
+"أخيراً افتكرتي."<br/><br/>
+فضلت تبصله ثواني طويلة، وبعدها قربت خطوة.<br/><br/>
+"إنت كنت عارف من أول يوم؟"<br/><br/>
+هز راسه بهدوء.<br/><br/>
+"ليه مقولتليش؟"<br/><br/>
+سكت لحظة قبل ما يقول:<br/><br/>
+"كنت عايزك تفتكريني لوحدك."<br/><br/>
+حور حسّت بغصة قوية في قلبها.<br/><br/>
+لأنها فجأة فهمت نظراته.<br/><br/>
+اهتمامه.<br/><br/>
+طريقته معاها.<br/><br/>
+هو ماكانش بيتعرف عليها من جديد...<br/><br/>
+هو عمره ما نسيها أصلاً.<br/><br/>
+<strong>— جزء خامس —</strong><br/><br/>
+"أنا نسيتك..."<br/><br/>
+قالتها بصوت مكسور.<br/><br/>
+مصطفى قرب منها فوراً.<br/><br/>
+"حور، الموضوع مش بإيدك."<br/><br/>
+"بس إنت فضلت فاكرني كل ده؟"<br/><br/>
+ضحك بخفة حزينة.<br/><br/>
+"للدرجة اللي خلتني محتفظ بإسورة خيط بقالها سبع سنين."<br/><br/>
+حور عينيها دمعت بدون ما تحس.<br/><br/>
+ولأول مرة، قلبها بدأ يستوعب إن الشخص اللي كانت بتحس معاه بالأمان طول الفترة اللي فاتت...<br/><br/>
+هو نفس الطفل اللي كانت بتحبه زمان.<br/><br/>
+<strong>— جزء سادس —</strong><br/><br/>
+لكن رغم كل ده، حور بدأت تخاف.<br/><br/>
+لأن الذكريات رجعت معها مشاعر كتير.<br/><br/>
+ومع المشاعر دي، رجع خوف قديم.<br/><br/>
+الخوف من التعلق.<br/><br/>
+وفي الليلة دي، مشيت بسرعة قبل ما تقول أي حاجة واضحة.<br/><br/>
+وسابت مصطفى واقف مكانه، بيبصلها وهي نازلة السلم.<br/><br/>
+ولأول مرة من رجوعها...<br/><br/>
+خاف يخسرها تاني.`
+}, 
+      
+      
+            {
+        title: 'الفصل الخامس — خطوة لورا.. وخطوتين لقدام',
+        preview: '🔗 البُعد بيكشف مشاعرهم.. ومصطفى يقرر ميسيبهاش تمشي تاني',
+        content: `<strong>— جزء أول —</strong><br/><br/>
+فات تلات أيام وحور مختفية تماماً.<br/><br/>
+مبتنزلش من الشقة، ومبتخبطش على الباب، وحتى رسائل الواتساب بقت ترد عليها بكلمة واحدة ناشفة بعد ساعات.<br/><br/>
+مصطفى كان هيروح فيا.. طالع نازل على السلم عينه على باب شقتها، وكل ما يلمح خيالها من ورا شيش البلكونة، قلبه ينقبض.<br/><br/>
+الخوف القديم رجع يهاجمه تاني.. خوف إنها تكون ندمت إنها رجعت، أو إن الذكريات تقلت عليها فقررت تبعد بجد.<br/><br/>
+وفي ليلة اليوم الرابع، مصطفى مستحملش.. لقى بلكونتها فتحت فجأة ودخلت منها نسمة هوا باردة، دخل شقته بسرعة وجاب الإسورة الزرقا في جيبه، وطلع على السطوح وهو عارف إنها أكيد هتروح هناك لما تضيق بيها الدنيا.<br/><br/>
+<strong>— جزء تاني —</strong><br/><br/>
+زي ما توقع.. كانت واقفة ساندة على سور السطوح، ضامة دراعاتها حوالين نفسها من البرد، وعينيها تايهة في أضواء الشارع الواسع.<br/><br/>
+صوت خطواته على الأرض خلاها تلتفت بسرعة.. ملامحها اتوترت وأول ما فكرت ترجع وتمشي، مصطفى وقف قدامها وقفل الطريق بهدوء.<br/><br/>
+"هتفضلي تهربي لحد إمتى يا حور؟"<br/><br/>
+صوته كان هادي، بس كان فيه نبرة وجع حقيقية خلتها تقف مكانها.<br/><br/>
+بصت للأرض وقالت بصوت واطي ومخنوق:<br/><br/>
+"أنا مش بهرب يا مصطفى.. أنا بس.. مش عارفة أواجهك."<br/><br/>
+قرب منها خطوة كمان. "مش عارفة تواجهيني عشان افتكرتيني؟ ولا عشان عرفتي إني منستكيش؟"<br/><br/>
+<strong>— جزء تالت —</strong><br/><br/>
+حور رفعت عينيها اللي كانت مليانة دموع محبوسة وقالت بنبرة مكسورة:<br/><br/>
+"عشان حاسة بالذنب! حاسة إني ظلمتك أوي.. إنت عشت سبع سنين شايل ذنبي وشايل إسورة خيط ومستني طفلة مشيت، وأنا عشت حياتي عادي، نسيت اسمك ونسيت ملامحك ولما رجعت كنت بتعامل معاك كأنه شخص غريب لسه عارفاها من كام يوم!"<br/><br/>
+مسحت دمعة نزلت رغماً عنها وكملت: "أنا خايفة.. خايفة أتعلق بيك تاني وأمشي، أو خايفة تكتشف إن حور بتاعة دلوقتي مش هي حور اللي إنت فضلت تحبها زمان."<br/><br/>
+مصطفى سمعها للاخر وهو متبسم ابتسامة صافية ودافية.. الابتسامة اللي دايماً كانت بتطمنها وهي عيلة صغيرة.<br/><br/>
+<strong>— جزء رابع —</strong><br/><br/>
+طلع الإسورة الزرقا من جيبه، وحطها في إيدها، وقفل صوابعها عليها براحة.<br/><br/>
+وبص في عيونها وقال بكل ثقة:<br/><br/>
+"أنا مش عايزك تحسي بالذنب ثانية واحدة يا حور.. الذاكرة دي بتاعة ربنا، ومفيش حد بيختار ينسى إيه ويفتكر إيه.. وأنا لما حبيتك زمان، ولما فضلت فاكرك، مكنش فرض عليكي إنك تعملي زيي."<br/><br/>
+سكت ثواني ونزل لمستواها وهو بيكمل: "وبعدين مين قالك إني بحب حور بتاعة زمان بس؟ أنا لما رجعتِ، اتعرفت على حور الجديدة.. البنت اللي بتشتغل وبتتعب، البنت اللي بتخاف من الضلمة وبتلف خاتمها لما تتوتر.. أنا حبيت اللي واقفة قدامي دلوقتي دي، حبتها لشخصها مش بس عشان ذكريات قديمة."<br/><br/>
+<strong>— جزء خامس —</strong><br/><br/>
+كلامه نزل على قلبها زي المطر.. الخوف اللي كان مكتفها بدأ يدوب واحدة واحدة.<br/><br/>
+"يعني مش زعلان إني نسيت؟" سألته بنبرة طفولية وهي بتبص للإسورة اللي في إيدها.<br/><br/>
+هز راسه ولفت ابتسامته لوشه كله: "أنا مبسوط إننا هنا دلوقتي.. الشارع ده مكنش واسع يا حور، الشارع ده كان ضيق وخانق طول ما إنتِ مش فيه.. ودلوقتي بس رجع الشارع الواسع اللي بنحب جرينا فيه."<br/><br/>
+حور ابتسمت وسط دموعها، ولأول مرة تحس إن الأمان اللي دايماً بتدور عليه مش في مكان، الأمان كله واقف قدامها في بلكونة قديمة وفوق سطوح مليان ذكريات.<br/><br/>
+وقبل ما تنزل، بصتله وقالت بدلال خفيف صلح كل الوجع اللي فات:<br/><br/>
+"اممم.. طب مادام الشارع رجع واسع.. متجيش نشرب عصير قصب بكره؟"<br/><br/>
+ضحك مصطفى من قلبه وقال: "من الصبح لو عايزة."<br/><br/>
+وفي الليلة دي، مصطفى وهو نازل لشقته عرف إن خطوة الهروب اللي حور خدتها لورا.. خلتهم يقربوا من بعض خطوتين لقدام.. وبقوة.`
+      },
+
+      {
+        title: 'الفصل السادس — دبلة وإسورة زرقا',
+        preview: '💍 مصطفى بياخد خطوة العمر.. والشارع كله بيحتفل بالحب القديم',
+        content: `<strong>— جزء أول —</strong><br/><br/>
+مرت الأيام بعد ليلة السطوح وكأنها في سحر.. مفيش هروب، مفيش خوف، بس في كلام كتير كان متداري وخرج كله في نظراتهم وضحكهم اللي رجع يملا المكان.<br/><br/>
+وفي يوم، مصطفى نزل من الشغل بدري على غير العادة.. دخل البيت متبسم، وبص لأمه وقال بجملة واحدة خطف بيها قلبها:<br/><br/>
+"يا أمي.. اجهزي عشان الليلة هنيجي نطلب حور رسمي."<br/><br/>
+أمه زغرطت زغروطة هزت جدران الشقة من الفرحة.. "أخيراً يا مصطفى! أخيراً يا ابن عمري هشوفك عريس والبنت اللي صنت حبها سنين هتكون ليك!"<br/><br/>
+مصطفى مكنش مستني.. رتب كل حاجة مع والد حور في التليفون، والراجل مكنش لاقي أأمن ولا أحسن من ابن الجيران وصاحب الطفولة عشان يأتمنه على بنته.<br/><br/>
+<strong>— جزء تاني —</strong><br/><br/>
+بالليل، الشقة قصاد الشقة.. الباب مفتوح على الباب زي زمان.<br/><br/>
+مصطفى كان واقف لابس قميص أسود شيك جداً، ماسك في إيده بوكيه ورد روز رقيق، وقلبه بيدق لدرجة إنه حاسس إن الشارع كله سامع دقاته.<br/><br/>
+خرجت حور.. كانت زي الملاك بفستان هادي لون السما الصافية، وشعرها مفرود ونازل على كتافها، عيونها كانت بتلمع بخجل وفرحة عمرها ما حست بيها قبل كده.<br/><br/>
+قعدوا، والكلام الرسمي بدأ يخلص بسرعة لأن العيلتين عشرة عمر وأصحاب سكن.. لحد ما والد حور ابتسم وقال بوقار:<br/><br/>
+"نقرا الفاتحة يا جماعة؟"<br/><br/>
+في اللحظة دي، مصطفى بص لحور وعيونه مليانة لمعة فرحة السبع سنين اللي فاتوا.. ورفعوا إيديهم وقروا الفاتحة، وحور حاسة إنها طايرة فوق السحاب.<br/><br/>
+<strong>— جزء تالت —</strong><br/><br/>
+"يلا يابني لبس عروستك الدبلة!"<br/><br/>
+الكل سقف وزغاريد أمهاتهم ملّت العمارة.. مصطفى قرب من حور وهو بيطلع علبة قطيفة حمرا من جيبه.. فتحها، وخرج منها دبلة دهب رقيقة جداً.<br/><br/>
+مسك إيدها براحة وهو حاسس برعشتها الخفيفة.. لبّسها الدبلة وبص في عينها وهمس بصوت دافي مسمعوش غيرها:<br/><br/>
+"مبروك عليا إنتي.. يا حور عمري كله."<br/><br/>
+حور وشها احمر من الكسوف وابتسمت من قلبها وهي بتطلع من العلبة دبلة مصطفى الفضة وبتلبسهاله.. لكن مصطفى مخلصش مفاجآته هنا.<br/><br/>
+<strong>— جزء رابع —</strong><br/><br/>
+مد إيده في جيبه التاني وطلع علبة أصغر.. حور بصتله باستغراب.<br/><br/>
+فتح العلبة.. مكنتش شبكة دهب تقليدية، كانت إسورة دهب رقيقة جداً، بس مصممة ومحفور عليها بخيط حرير أزرق نفس شكل الإسورة القديمة اللي حور ربطتهاله وهي طفلة قبل ما تسافر!<br/><br/>
+حور شهقت بفرحة وحطت إيدها على بوقها من الصدمة: "مصطفى! دي.."<br/><br/>
+ابتسم ولبسها الإسورة الدهب الزرقا في إيدها التانية وقال: "دي عشان تفضل في إيدك علطول.. الألماس والدهب كله ميسواش خيط واحد ربطتيه في إيدي زمان وصان قلبي لحد ما رجعتيلي."<br/><br/>
+دموع الفرحة نزلت من عيون حور، والكل سقف بحرارة وهما شايفين حكاية حب أسطورية بتتحقق قدام عيونهم.<br/><br/>
+<strong>— جزء خامس —</strong><br/><br/>
+بعد ما الناس مشيت والهدوء رجع للمكان.. وقفوا هما الاتنين في البلكونة، الدبل بتلمع في إيديهم تحت نور قمر ليلة دافية.<br/><br/>
+حور بصت لدبلتها وبعدين بصت لمصطفى وقالت بنبرة مليانة حب وصوت هادي جداً:<br/><br/>
+"عارف يا مصطفى.. أنا زمان لما ربطتلك الإسورة الزرقا وأنا ماشية وسألتك هتنسااني ولا لأ.. مكنتش أعرف إنك هتصون الوعد للدرجة دي.. أنا محظوظة بيك أوي."<br/><br/>
+مصطفى قرب منها وسند على السور وهو باصص للشارع اللي تحتهم اللي كان منور وفيه روح وحياة.. وقالها بيقين عاشق:<br/><br/>
+"أنا اللي محظوظ إن الشارع الواسع مفرطش فينا.. وإن البنت اللي تاهت من دنيتي وهي عندها اتناشر سنة.. رجعتلي وبقت عروسة قلبي وأنا عندي أربعة وعشرين سنة.. الحكاية لسه بتبدأ يا حور.. وجايين لسه لأحلى أيام."`
+      },
+       
+       
+             {
+        title: 'الفصل السابع والأخير — وفرحت لمتنا',
+        preview: '🎉 يوم الفرح.. الشارع الواسع بيتقفل عشان ليلة العمر وجنان مصطفى وحور',
+        content: `<strong>— جزء أول —</strong><br/><br/>
+بعد سنة كاملة من التجهيزات، وخناقات اختيار ألوان الحوائط، والنزول لدمياط عشان العفش.. جه اليوم الموعود.<br/><br/>
+اليوم الشارع الواسع اتصالح فيه مع الدنيا بالكامل.. الشارع اتقفل بالفراشة والأنوار، وصوت الأغاني والمهرجانات واصل لآخر المنطقة، والكل طالع نازل يبارك.<br/><br/>
+مصطفى كان في ليلة حنته قاعد وسط صحابه على القهوة، لابس جلابية بلدي، وبيرقص بالعصاية وهو مش مصدق إن بكره الصبح حور هتكون في بيته.. شقتهم الجديدة اللي اختاروها في نفس العمارة، عشان يفضل الباب قصاد الباب والذكريات متمشيش.<br/><br/>
+صاحبه يوسف خبطه في كتفه وضاحك: "جرا إيه يا عريس؟ فك التكشيرة دي.. ده إنت مستني اليوم ده من أيام ما كنت بتلبس شورت ميكي ماوس!"<br/><br/>
+ضحك مصطفى من قلبه وقال: "أنا مش مكشر يا غبي.. أنا خايف أصحى ألاقي نفسي لسه عندي 12 سنة وحور بتخبط عليا تقولي يلا الساندوتشات هتبوظ!"<br/><br/>
+<strong>— جزء تاني —</strong><br/><br/>
+يوم الفرح بالليل.. القاعة كانت منورة، والكل مستني دخول العرسان.<br/><br/>
+فتحت الأبواب.. ودخل مصطفى بالبدلة السوداء الشيك، وجنبه حور بفستان الفرح الأبيض المنفوش الكهرماني اللي مخليها شبه الأميرات.. بس حور مكنتش أميرة هادية خالص، كانت ماشية وبترقص وتضحك لصحابها من ورا الطرحة.<br/><br/>
+أول ما وصلوا للكوشة، مصطفى وطى عليها وهمس: "لمي نفسك يا عروسة.. الناس بتبص علينا والمنظر العام بيبوظ!"<br/><br/>
+حور ضحكت بدلال وقالت بصوت واطي: "بقولك إيه يا درش.. الفستان ده تقيل أوي ومكلبش حركتي، أنا أول ما الأغنية الجاية تشتغل هقلع الهيلز ده وأرقص حافية، وإنت اتصرف مع المعازيم!"<br/><br/>
+مصطفى حط إيده على دماغه: "يا بنتي اتقي الله.. بقالنا سنة بنتعلم اتيكيت، وف الآخر هترقصي حافية في الكوشة؟"<br/><br/>
+<strong>— جزء تالت —</strong><br/><br/>
+اشتغلت أغنية رومانسية هادية عشان الرقصة الأولى (Slow).<br/><br/>
+مصطفى مسك إيد حور وحط إيده التانية ورا ضهرها، وبدأوا يتحركوا ببطء تحت أضواء الليزر الخفيفة.<br/><br/>
+حور بصت في عيونه وقالت برومانسية حقيقية: "مصطفى.. أنا بجد مش مصدقة.. حاسة إني بحلم."<br/><br/>
+بصلها بحب ودفء وقال: "ولا أنا يا حور.. السبع سنين البُعد دول اختفوا في ثانية أول ما مسكت إيدك دلوقتي.. إنتي أجمل عروسة عيني شافتها في الدنيا."<br/><br/>
+حور عينيها لمعت بالدموع: "بحبك يا مصطفى.. بحبك من وأنا عيلة صغيرة وبجري وراك، وبحبك دلوقتي وإنت جوزي وبطلي."<br/><br/>
+وف وسط اللحظة الرومانسية المؤثرة دي، حور داسيت بفستانها على رجله بالغط.. مصطفى كاتم الوجع بالعافية ومبتسم للكاميرا: "الله يخرب بيتك يا حور.. صباع رجلي الصغير اتمسح من الوجود.. اضحكي للكاميرا اضحكي متفضحيناش!"<br/><br/>
+حور ميتة على نفسها من الضحك: "آسفة والله الفستان من تحت عامل شبه الخيمة مش شايفه رجلي!"<br/><br/>
+<strong>— جزء رابع —</strong><br/><br/>
+الفرح خلص بسلام بعد كمية رقص وجنان من العرسان وصحابهم.. ووصلوا أخيراً لبيتهم الجديد.<br/><br/>
+حور دخلت الشقة ورمت بوكيه الورد على الكنبة، وقعدت وهي بتنفخ: "آآآه يا رجلي.. أخيراً! الفستان ده كان مؤامرة ضد البشرية."<br/><br/>
+مصطفى قفل باب الشقة ووقف يبص لها بابتسامة مليانة راحة وسعادة.. قرب منها، وقعد جنبها على الكنبة.. مسك إيدها اليمين اللي فيها الدبلة، وبص للإسورة الدهب المحفور عليها الخيط الأزرق في إيدها التانية.<br/><br/>
+حور سكتت وبصتله بحنان.. شال الطرحة من على شعرها براحة وقالها:<br/><br/>
+"نورتِ بيتك يا حور.. نورتِ دنيتي كلها."<br/><br/>
+<strong>— جزء خامس —</strong><br/><br/>
+حور ساندت راسها على كتفه، وبصت من شباك الصالة اللي كاشف الشارع الواسع القديم بتاعهم من فوق.<br/><br/>
+الشارع كان هادي والأنوار لسه منورة فيه.. وقالت بهدوء دافي:<br/><br/>
+"تفتكر الأطفال اللي هيجروا في الشارع ده بكره.. هيحبوا بعض زينا؟"<br/><br/>
+مصطفى باس راسها وهمس بابتسامة ثقة وضحكة خفيفة:<br/><br/>
+"مفتكرش.. مفيش حد في الشارع ده هيكون عنده حور.. ومفيش حد في الدنيا هيكون مجنون ومحظوظ زي مصطفى.. يلا بقى قومي فكي الخيمة دي عشان نعمل عصير قصب ونقعد في البلكونة.. ورانا حكايات كتير لسه مخلصتش."<br/><br/>
+ووقفت الرواية هنا.. بس الحكاية في الشارع الواسع عمرها ما هتقفل بابها أبداً.<br/><br/>
+<strong>— تمت بحمد الله —</strong>`
+      }
+
+       
+       
+       
+    ];
+
+    let currentChapterIndex = null;
+
+        function renderChapters() {
+      const container = document.getElementById('chaptersButtons');
+      container.innerHTML = '';
+      chapters.forEach((ch, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'fall-btn';
+        btn.onclick = () => openChapter(idx);
+        btn.innerHTML = `
+          <div class="btn-top">
+            <span class="btn-num">${idx + 1}</span>
+            <div class="btn-text-wrap">
+              <div>${ch.title}</div>
+              <div class="btn-preview">${ch.preview}</div>
+            </div>
+          </div>
+        `;
+        container.appendChild(btn);
+      }); // القفلة الصحيحة هنا لـ forEach
+    } // قفلة الدالة renderChapters
+
+    function openChapter(index) {
+      currentChapterIndex = index;
+      const ch = chapters[index];
+      document.getElementById('chapterLabel').textContent = ch.title;
+      document.getElementById('chapterTitle').textContent = ch.title;
+      document.getElementById('chapterContent').innerHTML = ch.content;
+      document.getElementById('view-main').classList.remove('active');
+      document.getElementById('view-chapter').classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    function goBack() {
+      document.getElementById('view-chapter').classList.remove('active');
+      document.getElementById('view-main').classList.add('active');
+      window.scrollTo(0, 0);
+    }
+let musicPlaying = false;
+let audio = null;
+let currentTrack = 0;
+
+const songs = [
+  'https://files.catbox.moe/lxndt.mp3',
+  'https://files.catbox.moe/twmgbl.mp3',
+  'https://files.catbox.moe/6qzo5p.mp3',
+  'https://files.catbox.moe/cw8poa.mp3',
+  'https://files.catbox.moe/hjqj1k.mp3',
+  'https://files.catbox.moe/2bdoc7.mp3',
+  'https://files.catbox.moe/cmzw9j.mp3',
+  'https://files.catbox.moe/1dspxh.mp3',
+  'https://files.catbox.moe/t5xnwb.mp3',
+  'https://files.catbox.moe/aolqiy.mp3'
+];
+
+
+function handleMusic() {
+  const btn = document.getElementById('musicBtn');
+  const status = document.getElementById('musicStatus');
+
+  if (!musicPlaying) {
+    audio = new Audio(tracks[currentTrack]);
+    audio.loop = true;
+    audio.volume = 0.5;
+    audio.play();
+    musicPlaying = true;
+    btn.classList.add('music-active');
+    btn.textContent = '♪ إيقاف الموسيقى';
+    status.textContent = '🎵 موسيقى ' + (currentTrack + 1);
+  } else {
+    audio.pause();
+    currentTrack++;
+    if (currentTrack < tracks.length) {
+      audio = new Audio(tracks[currentTrack]);
+      audio.loop = true;
+      audio.volume = 0.5;
+      audio.play();
+      btn.textContent = '♪ إيقاف الموسيقى';
+      status.textContent = '🎵 موسيقى ' + (currentTrack + 1);
+    } else {
+      musicPlaying = false;
+      currentTrack = 0;
+      audio = null;
+      btn.classList.remove('music-active');
+      btn.textContent = '♪ تشغيل موسيقى';
+      status.textContent = '🎵 الموسيقى متوقفة';
+    }
+  }
+  status.classList.add('show');
+  setTimeout(() => status.classList.remove('show'), 2000);
+}
+renderChapters();
+  </script>
+</body>
+</html>

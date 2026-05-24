@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>قارئ الروايات — الورقة الأخيرة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Lateef:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --neon-pink: #ff2d9b;
+      --neon-pink-glow: #ff2d9b88;
+      --neon-pink-light: #ff6ec7;
+    }
+
+    html, body { min-height: 100vh; font-family: 'Tajawal', sans-serif; }
+
+    body {
+      background: #0a050a;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(120, 0, 80, 0.18) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(60, 0, 100, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 60% 80%, rgba(80, 0, 60, 0.12) 0%, transparent 50%);
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url('https://files.catbox.moe/jiabr3.jpg');
+     pointer-events: none;
+      z-index: 0;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ═══════════════════════════════════
+       VIEW 1 — الصفحة الرئيسية
+    ═══════════════════════════════════ */
+    #view-main {
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px 60px;
+    }
+    #view-main.active { display: flex; }
+
+    .profile-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 36px;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      width: 130px;
+      height: 130px;
+      cursor: pointer;
+      margin-bottom: 14px;
+    }
+
+    .avatar-wrap img {
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      position: relative;
+      z-index: 2;
+      transition: transform 0.4s ease;
+    }
+    .avatar-wrap:hover img { transform: scale(1.06); }
+
+    .avatar-ring {
+      position: absolute; inset: -5px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--neon-pink) 0deg, transparent 80deg,
+        var(--neon-pink-light) 160deg, transparent 240deg,
+        var(--neon-pink) 360deg
+      );
+      animation: spin 3s linear infinite;
+      z-index: 1;
+    }
+    .avatar-ring::after {
+      content: '';
+      position: absolute; inset: 4px;
+      border-radius: 50%;
+      background: #0a050a;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .avatar-glow {
+      position: absolute; inset: -15px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--neon-pink-glow) 0%, transparent 70%);
+      animation: pulse-glow 2s ease-in-out infinite alternate;
+      z-index: 0;
+    }
+    @keyframes pulse-glow {
+      from { opacity: 0.5; transform: scale(0.95); }
+      to   { opacity: 1;   transform: scale(1.05); }
+    }
+
+    .avatar-msg {
+      position: absolute;
+      bottom: -52px; left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      background: rgba(10,5,25,0.92);
+      border: 1px solid var(--neon-pink);
+      color: var(--neon-pink-light);
+      font-size: 13px;
+      white-space: nowrap;
+      padding: 7px 16px;
+      border-radius: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      box-shadow: 0 0 14px var(--neon-pink-glow);
+      z-index: 10;
+    }
+    .avatar-msg.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .novel-title-area {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .novel-main-title {
+      font-family: 'Tajawal', sans-serif;
+      font-size: clamp(26px, 6vw, 42px);
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 0 30px var(--neon-pink-glow), 0 0 60px rgba(255,45,155,0.3);
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    .novel-subtitle {
+      font-family: 'Tajawal', sans-serif;
+      font-size: clamp(13px, 2.5vw, 16px);
+      color: rgba(255,110,199,0.7);
+      font-weight: 400;
+      letter-spacing: 3px;
+    }
+
+    .main-card {
+      background: rgba(10, 10, 15, 0.75);
+      backdrop-filter: blur(18px) saturate(1.4);
+      -webkit-backdrop-filter: blur(18px) saturate(1.4);
+      border: 1px solid rgba(255, 45, 155, 0.22);
+      border-radius: 20px;
+      width: 100%; max-width: 640px;
+      padding: 36px 28px 30px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+    }
+
+    .card-title {
+      text-align: center;
+      color: #f0e6ff;
+      font-size: clamp(16px, 3.5vw, 20px);
+      font-weight: 700;
+      margin-bottom: 28px;
+      text-shadow: 0 0 20px var(--neon-pink-glow);
+    }
+
+    .buttons-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .fall-btn {
+      position: relative;
+      padding: 0; border: none; background: none;
+      cursor: pointer; outline: none;
+      font-family: 'Tajawal', sans-serif;
+      width: 100%;
+    }
+
+    .fall-btn .btn-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      padding: 14px 22px;
+      font-size: clamp(13px, 2.5vw, 16px);
+      font-weight: 700;
+      color: var(--neon-pink-light);
+      background: linear-gradient(135deg, #1a0a1e 0%, #0f0515 100%);
+      border-radius: 12px;
+      border: 1.5px solid rgba(255,45,155,0.4);
+      box-shadow: 0 0 8px rgba(255,45,155,0.15), inset 0 1px 0 rgba(255,255,255,0.06);
+      transform: translateY(-4px);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s;
+      text-align: right;
+    }
+    .fall-btn .btn-num {
+      font-size: 11px;
+      color: rgba(255,110,199,0.5);
+      font-weight: 400;
+      margin-right: auto;
+    }
+    .fall-btn .btn-preview {
+      display: block;
+      font-size: 11px;
+      color: rgba(200,160,220,0.6);
+      font-weight: 400;
+      margin-top: 3px;
+    }
+    .fall-btn .btn-text-wrap { text-align: right; flex: 1; }
+    .fall-btn::after {
+      content: '';
+      display: block;
+      position: absolute;
+      bottom: 0; left: 6px; right: 6px; height: 8px;
+      background: #5a0030;
+      border-radius: 0 0 12px 12px;
+      z-index: -1;
+    }
+    .fall-btn:hover .btn-top {
+      transform: translateY(-2px);
+      box-shadow: 0 0 20px rgba(255,45,155,0.35), inset 0 1px 0 rgba(255,255,255,0.1);
+      border-color: rgba(255,45,155,0.7);
+    }
+    .fall-btn:active .btn-top {
+      transform: translateY(0);
+      box-shadow: 0 0 6px var(--neon-pink-glow);
+    }
+
+    .chapter-msg {
+      overflow: hidden; max-height: 0; opacity: 0;
+      transition: max-height 0.5s ease, opacity 0.4s ease, padding 0.3s ease;
+      text-align: center;
+    }
+    .chapter-msg.show { max-height: 80px; opacity: 1; padding: 12px 0 4px; }
+    .chapter-msg span {
+      display: inline-block;
+      background: rgba(255,45,155,0.10);
+      border: 1px solid rgba(255,45,155,0.3);
+      border-radius: 30px;
+      padding: 6px 20px;
+      color: var(--neon-pink-light);
+      font-size: 13px;
+    }
+
+    /* ═══════════════════════════════════
+       VIEW 2 — صفحة الفصل
+    ═══════════════════════════════════ */
+    #view-chapter {
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    .top-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8, 3, 20, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,45,155,0.20);
+      padding: 13px 24px;
+      text-align: center;
+    }
+
+    .chapter-label {
+      color: #e8d8f8;
+      font-size: clamp(14px, 3vw, 18px);
+      font-weight: 700;
+      text-shadow: 0 0 16px var(--neon-pink-glow);
+    }
+
+    .chapter-body {
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px 120px;
+    }
+
+    .reading-card {
+      width: 100%; max-width: 760px;
+      background: rgba(8, 5, 18, 0.82);
+      backdrop-filter: blur(20px) saturate(1.6);
+      -webkit-backdrop-filter: blur(20px) saturate(1.6);
+      border: 1px solid rgba(255,45,155,0.15);
+      border-radius: 16px;
+      padding: clamp(28px, 5vw, 56px) clamp(22px, 5vw, 58px);
+      box-shadow: 0 8px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
+    }
+
+    .reading-card h2 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: clamp(20px, 4vw, 30px);
+      font-weight: 900;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 36px;
+      text-shadow: 0 0 24px var(--neon-pink-glow);
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,45,155,0.2);
+    }
+
+    #chapterContent {
+      font-family: 'Lateef', serif;
+      font-size: clamp(19px, 2.8vw, 24px);
+      line-height: 2.2;
+      color: rgba(235,225,245,0.93);
+      text-align: justify;
+    }
+
+    #chapterContent .part-title {
+      display: block;
+      font-family: 'Tajawal', sans-serif;
+      font-size: clamp(16px, 2.5vw, 20px);
+      font-weight: 800;
+      color: var(--neon-pink-light);
+      text-align: center;
+      margin: 36px 0 20px;
+      text-shadow: 0 0 16px var(--neon-pink-glow);
+      letter-spacing: 1px;
+    }
+
+    #chapterContent .dialogue {
+      display: block;
+      color: rgba(255,200,230,0.95);
+      font-style: italic;
+      padding: 4px 0;
+    }
+
+    .bottom-controls {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 200;
+      background: rgba(5, 2, 15, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(255,45,155,0.15);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .ctrl-btn {
+      background: rgba(20,10,30,0.9); color: #ccc;
+      border: 1.5px solid rgba(255,255,255,0.15); border-radius: 10px;
+      padding: 10px 24px;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .ctrl-btn:hover { background: rgba(40,20,50,0.9); border-color: rgba(255,255,255,0.3); color: #fff; }
+    .ctrl-btn:active { transform: scale(0.97); }
+    .ctrl-btn.music-active { border-color: var(--neon-pink); color: var(--neon-pink-light); background: rgba(255,45,155,0.1); }
+
+    .music-status {
+      position: fixed;
+      bottom: 72px; left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: rgba(10,5,25,0.93);
+      border: 1px solid var(--neon-pink);
+      color: #ff6ec7;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 13px;
+      padding: 7px 20px;
+      border-radius: 30px;
+      white-space: nowrap;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      box-shadow: 0 0 16px var(--neon-pink-glow);
+      z-index: 300;
+    }
+    .music-status.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 480px) {
+      .reading-card { border-radius: 12px; }
+      .bottom-controls { gap: 10px; padding: 10px 12px; }
+      .ctrl-btn { padding: 8px 16px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="view-main" class="view active">
+
+    <div class="profile-section">
+      <div class="avatar-wrap" onclick="toggleAvatarMsg()">
+        <div class="avatar-glow"></div>
+        <div class="avatar-ring"></div>
+        <img
+          src="https://files.catbox.moe/inbpcb.jpg"
+          alt="صورة الرواية"
+          onerror="https://files.catbox.moe/fpx2sr.jpg"
+        />
+        <div class="avatar-msg" id="avatarMsg">انتي بتدوسي وخلاص بس.ي قزحه 😂🌹</div>
+      </div>
+    </div>
+
+    <div class="novel-title-area" style="margin-top:60px;">
+     <div class="novel-main-title">البوابة الزرقا👽👻</div>
+    </div>
+
+    <div class="main-card">
+      <div class="card-title">✨.اختاري الفصل الي هتقرأيه ي قزحه ✨  <br>روايه رعب 👽👻</div>
+      <div class="buttons-wrapper" id="chaptersButtons"></div>
+      <div class="chapter-msg" id="chapterMsg">
+        <span id="chapterMsgText"></span>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="view-chapter" class="view">
+    <div class="top-bar">
+      <span class="chapter-label" id="chapterLabel"></span>
+    </div>
+    <div class="chapter-body">
+      <div class="reading-card">
+        <h2 id="chapterTitle"></h2>
+        <div id="chapterContent"></div>
+      </div>
+    </div>
+    <div class="bottom-controls">
+      <button class="ctrl-btn" id="musicBtn" onclick="handleMusic()">♪ تشغيل موسيقى</button>
+      <button class="ctrl-btn" onclick="goBack()">← رجوع</button>
+    </div>
+    <div class="music-status" id="musicStatus"></div>
+  </div>
+
+  <script>
+    const chapters = [
+  {
+    title: 'الفصل الأول — الشقة اللي في الدور التالت',
+    preview: '📖 أدهم بيلاقي جواب غريب في أوضة جده المتوفي...',
+    content: `<span class="part-title">— جزء أول —</span>
+الشمس كانت بدأت تغيب لما أدهم فتح باب الشقة القديمة. الشقة دي في حي شبرا، في عمارة عندها من الحكايات أكتر من طوابقها. العمارة من زمان، الدرج فيها بيئن لما حد يطلع عليه، والجيران بيعرفوا بعض من ساعة ما كانوا صغيرين لحد ما بقوا كبار وولادهم كبروا زيهم بالظبط.
+<br/><br/>
+الجد، الحاج سليمان، مات من تلت أسابيع. تلت أسابيع والأسرة لسه في حالة مش قادرة تبقى عادية. مش بس الحزن — الحاج سليمان كان إنسان كبير وحضوره كان ملاصق للبيت زي ما الدهان ملاصق للحيطان. لكن في أسرة زي دي، الحزن بييجي مع حاجة تانية: مسألة الشقة.
+<br/><br/>
+<span class="dialogue">— أدهم يا واد، ما تروحش هناك لوحدك. انتظر بكره ونروح مع بعض.</span>
+<br/>
+الأم، أم أدهم، قالتها وهي بتعمل شاي في المطبخ. بس أدهم ما سمعش، أو سمع وادّعى إنه ما سمعش — الاتنين محتملين.
+<br/><br/>
+أدهم عنده ستة وعشرين سنة. بيشتغل في شركة تصميم جرافيك صغيرة في وسط البلد، بيصحى كل يوم الساعة سبعة ونص، بياكل فول وطعمية من العربية اللي تحت البيت، وبيرجع بالليل تعبان وعنده مزاج يسمع موسيقى ويقعد على النت ومش أكتر. حياته زي خط مستقيم — مش كتير ومش قليل.
+<br/><br/>
+بس جده كان بيقطع الخط ده. كان بيفرق.
+<br/><br/>
+<span class="part-title">— جزء تاني —</span>
+الشقة زي ما سابها الحاج سليمان. الأثاث لسه في مكانه — الكنبة البيجي اللي اتغيرت أغطيتها مرتين على الأقل من ساعة ما أدهم عارفها، التليفزيون القديم اللي ما بيشتغلش من زمان، الرف اللي فيه كتب ومجلات قديمة وصور في براويز.
+<br/><br/>
+أدهم وقف قدام الرف ده. الصور دي كان بيشوفها من وهو طفل — الجد وهو شاب، صورة سوداء وبيضا فيها بزة وشنب وشعر متمشط بعناية. جنبيه ست وقفانة تبص بجدية زي ما الصور القديمة كلها اللي فيها الناس مش بتبتسم.
+<br/><br/>
+<span class="dialogue">— دي مين يا جدو؟</span>
+<br/>
+سأله أدهم مرة وهو صغير.
+<br/><br/>
+<span class="dialogue">— دي ست من زمان.</span>
+<br/>
+والجد قفل الموضوع. من غير ما يكمّل. من غير اسم ولا قرابة ولا أي تفصيلة. وأدهم الصغير ما فضّلش يسأل لأنه حس إن في حاجة في صوت جده بتقول "ما تكملش".
+<br/><br/>
+دلوقتي، أدهم الكبير واقف قدام نفس الصورة. والسؤال اللي ما اتجاوبش من ساعتها لسه عايش في حتة ما في جوّاه.
+<br/><br/>
+فتح دراج التسريحة في أوضة الجد. دراجات كتير. ملابس مطوية بعناية، جوارب مترتبة، منديل أبيض رُبي تحته خيط مسبحة. في الدراج التاني من تحت، تحت كومة من الأوراق القديمة — فواتير وجرايد ووصفات دكتور — لاقى ضم أوراق متلفوف حواليها رباط مطاط بنّي.
+<br/><br/>
+الرباط كان جاف ومتشقق من كتر القِدَم. لما أدهم حركه انكسر وقع على الأرض.
+<br/><br/>
+<span class="part-title">— جزء تالت —</span>
+الأوراق كانت جواب. مكتوب بخط اليد. خط قديم، متعب شوية، زي حد اتجهد في كتابة كل حرف. التاريخ في أول السطر كان من سنة ألفين وواحد.
+<br/><br/>
+أدهم قعد على طرف السرير وبدأ يقرأ.
+<br/><br/>
+<span class="dialogue">"سليمان العزيز، أكتب إليك وأنا أعلم أنك ربما لن تقرأ هذا. لكنني لا أستطيع أن أحمل هذا وحدي بعد الآن. مضى على آخر لقاء بيننا خمسة وعشرون عاماً، وأنا لم أتوقف يوماً عن التفكير فيما كان يمكن أن يحدث لو..."</span>
+<br/><br/>
+الجواب كان بالفصحى. مش شائع ده من ناس في الستينات والسبعينات — ناس جيل جدوده كانوا بيكتبوا بالفصحى حتى في الرسايل الشخصية. أدهم كمّل يقرأ ببطء.
+<br/><br/>
+الرسالة كانت بتتكلم عن حاجة حصلت من زمان بعيد. عن اختيار أثّر في حياة ناس كتير. عن موضوع ما اتحلش وموضوع انزعج من حاجة اتعملت.
+<br/><br/>
+وفي الآخر، الإمضا. اسم مش عارفه أدهم. اسم ما سمعه في عمره.
+<br/><br/>
+<span class="dialogue">— "نزهة حسن الشرقاوي"</span>
+<br/><br/>
+<span class="part-title">— جزء رابع —</span>
+أدهم قضى ساعة قاعد في الأوضة. الجواب في إيده. ما حركش. الصوت الوحيد كان صوت العربيات من الشارع، وبعيد في الشقة المقابلة في حد شغال تليفزيون.
+<br/><br/>
+نزهة مين؟ وما اللي حصل بين جده وبينها؟ والجواب ده وصل ولا ما وصلش؟ ولو وصل، ليه الجد ما ردش؟ ولو ما وصلش، ليه هو لاقيه في الدراج؟
+<br/><br/>
+الأسئلة كانت بتتوالى في دماغه زي ما بتتوالى عربيات المترو. سؤال ورا سؤال من غير وقفة.
+<br/><br/>
+تليفونه رن. أمه.
+<br/><br/>
+<span class="dialogue">— آلو؟</span>
+<br/>
+<span class="dialogue">— أدهم فين؟ بقالك ساعتين!</span>
+<br/>
+<span class="dialogue">— في الشقة يا ماما. جاي.</span>
+<br/>
+<span class="dialogue">— الأكل اتبرد!</span>
+<br/>
+<span class="dialogue">— جاي دلوقتي.</span>
+<br/><br/>
+لكنه ما قامش فوراً. قلّب الجواب في إيده مرة تانية. نزهة. الاسم عجيب وما بيتقالش كتير دلوقتي. زمان الناس كانوا بيسموا بناتهم نزهة. اسم فيه رايحة قديمة.
+<br/><br/>
+حط الجواب في جيبه. وقام. وقفل باب الشقة وراه بالمفتاح.
+<br/><br/>
+<span class="part-title">— جزء خامس —</span>
+على العشا، الأسرة اتجمعت. أم أدهم، أبوه، أخته سلمى اللي أصغر منه بأربع سنين وبتدرس هندسة. عمه كمال وزوجته أم البنات اللي اسمها ستات سهير، جاي من شبرا الخيمة زيارة. العشا كان ملوخية وأرز وفراخ محمرة. الأكل اللي بييجي مع المناسبات الكبيرة — الأفراح والأحزان على حد سواء.
+<br/><br/>
+<span class="dialogue">— الشقة هتتباع؟</span>
+<br/>
+سلمى سألت وهي بتشيل من طبق الأرز.
+<br/><br/>
+<span class="dialogue">— مش عارفين بعد. لازم نتفاهم.</span>
+<br/>
+الأب رد بهدوء. رجل هادي، محمد صبري، بيشتغل مهندس في شركة مقاولات. ما بيتكلمش كتير. لما بيتكلم الناس بتسمع.
+<br/><br/>
+<span class="dialogue">— أنا رأيي نسيبها على ما نحسم الأمور.</span>
+<br/>
+عمه كمال قال ده وهو بيكسر عيش.
+<br/><br/>
+أدهم كان بيبص في طبقه. الجواب في جيبه. حس بثقله رغم إنه ورق بس.
+<br/><br/>
+<span class="dialogue">— عارفين حد اسمه نزهة الشرقاوي؟</span>
+<br/><br/>
+الجملة طلعت منه من غير ما يخطط. كأن لسانه قررها لوحده. وفي اللحظة دي، شاف حاجة في وش عمه كمال. حاجة صغيرة جداً — زي تغيير بسيط في ملامحه، زي حد صحي فجأة. بس راحت سريع وعمه كمال كمّل بيأكل زي ما هو.
+<br/><br/>
+<span class="dialogue">— مين دي؟</span>
+<br/>
+الأم سألت.
+<br/><br/>
+<span class="dialogue">— حد قرأت اسمه بس. مش مهم.</span>
+<br/><br/>
+أدهم رجع يبص في طبقه. بس دلوقتي في سؤال تاني في دماغه. سؤال مش عن نزهة. عن عمه كمال.
+<br/><br/>
+<span class="part-title">— جزء سادس —</span>
+بعد العشا وبعد ما الكل انصرف، أدهم قعد في أوضته. شقة أهله في عمارة تانية قريبة، مش بعيد. هو لسه ساكن مع أهله — مش عن حاجة، عن إنه ما وصلش لتفكير كويس في موضوع إنه ييجي شقة لوحده. ده موضوع لتاني يوم دايماً.
+<br/><br/>
+فتح لاب توب وبدأ يدور. "نزهة حسن الشرقاوي". على جوجل طلعت نتايج عن ناس كتير باسم مشابه — موقع فيسبوك، إعلانات وظايف، موقع عروسة في محافظة تانية. مش حاجة محددة.
+<br/><br/>
+جرّب تاني. "نزهة الشرقاوي شبرا". نتايج أقل وأبعد. جرب "نزهة شرقاوي مصر القديمة". ومرة تالتة بكلام تاني.
+<br/><br/>
+ما لاقيش حاجة. الإنترنت مليان بأسماء، بس الاسم ده في الزمن ده — ست بتكتب لجد من أكتر من عشرين سنة — مش نوع الحاجة اللي بتظهر على أوتوماتيك في نتايج البحث.
+<br/><br/>
+حط لاب التوب جنبه وفرد الجواب على السرير. الخط القديم. الكلمات اللي بتعمل إيحاءات أكتر مما بتقول. الجملة دي بالذات:
+<br/><br/>
+<span class="dialogue">"ما فعلته لم يكن خيانة، كنت أعرف ذلك. لكن التسمية لا تغير الشعور."</span>
+<br/><br/>
+إيه اللي اتعمل؟ مين اللي اتخان؟
+<br/><br/>
+<span class="part-title">— جزء سابع —</span>
+الأيام الجاية كانت عادية من برا. أدهم بيصحى ويروح الشغل ويرجع. بس من جوّا في حاجة اتحركت. زي حجر اترمى في بحيرة ساكنة — الموية اللي فوق بتتحرك والحجر بيكمل ينزل.
+<br/><br/>
+في الشغل، بيتكلم مع زملاؤه ويضحك على حاجات وبيصمم براشور لعميل في المعادي. بس جزء منه مش موجود. جزء منه لسه في أوضة الجد بيقرأ الجواب مرة تانية.
+<br/><br/>
+ريم، زميلته في الشغل، لاحظت.
+<br/><br/>
+<span class="dialogue">— إنت مش هنا النهارده.</span>
+<br/>
+قالتله وهي بتحط كوباية شاي قدامه على المكتب.
+<br/><br/>
+<span class="dialogue">— أنا هنا.</span>
+<br/>
+<span class="dialogue">— جسمك هنا. إنت لأ.</span>
+<br/><br/>
+ريم دي ذكية. المشكلة إن الناس الذكيين بيحسوا بحاجات الناس التانيين. وده مش دايماً مريح.
+<br/><br/>
+<span class="dialogue">— في حاجة لاقيتها في بيت جدي.</span>
+<br/>
+قالها من غير ما يفكر كتير.
+<br/><br/>
+<span class="dialogue">— إيه الحاجة؟</span>
+<br/>
+<span class="dialogue">— جواب. لشخص اسمه نزهة.</span>
+<br/>
+<span class="dialogue">— ومين نزهة؟</span>
+<br/>
+<span class="dialogue">— ده هو السؤال.</span>
+<br/><br/>
+ريم بصتله بعيون واسعة. بس ما فضلتش تسأل. حست إنه ما بيحتاجش أسئلة دلوقتي.`
+  },
+  {
+    title: 'الفصل الثاني — عمي كمال وحكاية مش كاملة',
+    preview: '🌙 عمه عارف أكتر مما بيقول... والسر بيكبر...',
+    content: `<span class="part-title">— جزء أول —</span>
+عمه كمال ساكن في شقة في المنيل. شقة قديمة، دور تاني، الشارع ضيق ومظلل بشجرة جميز كبيرة. كمال سليمان، أخو أبوه من الجد نفسه — يعني عمه من ناحية الجد. عنده اثنين وستين سنة، متقاعد، كان مدرس تاريخ في مدرسة ثانوي لمدة تلاتين سنة. وده في حد ذاته بيقول حاجة — حد بيدرّس تاريخ ٣٠ سنة مش ممكن يكون بسيط.
+<br/><br/>
+أدهم ما اتصلش قبل ما يمشي. ده كان خطأ ممكن — بس حس إنه لو اتصل ممكن كمال يبقى "مستعد" أكتر. وأدهم مش محتاج "مستعد". محتاج حد بيتفاجأ.
+<br/><br/>
+دق الجرس. الباب اتفتح وعمه كمال وقف قدامه في بيجامة وتيشيرت وعنده شبشب في رجليه.
+<br/><br/>
+<span class="dialogue">— أدهم؟ في إيه؟ حصل حاجة؟</span>
+<br/>
+<span class="dialogue">— لا يا عمي. بس عايز أتكلم معاك.</span>
+<br/>
+<span class="dialogue">— اتفضل، اتفضل.</span>
+<br/><br/>
+<span class="part-title">— جزء تاني —</span>
+الشقة كانت فيها رايحة كتب قديمة وسجاير. عمه كمال بيدخن من السبعينات ومش ناوي يبطل. فيه رف كبير بكتب من أول ورق لحد السقف تقريباً. في ركن في التليفزيون وقدامه كرسي جلد اتهري من كتر الاستخدام. ده بيت راجل اتعوّد على نفسه.
+<br/><br/>
+عمه كمال اتجوز وانفصل من أكتر من عشرين سنة. ولاده يسكنوا مع أمهم في الإسكندرية وبييجوا يزوروه في الأجازات. ما بيشتكيش. لكن البيت بيقول حكاية مختلفة — بيت حد تعلّم يكون لوحده، مش حد سعيد بالوحدة.
+<br/><br/>
+<span class="dialogue">— قهوة ولا شاي؟</span>
+<br/>
+<span class="dialogue">— شاي يا عمي، شكراً.</span>
+<br/><br/>
+قعد أدهم على الكنبة. الكنبة كانت ناشفة وحشو أسفنجها اتضغط. عمه راح المطبخ وصوت الغلاية اتسمع.
+<br/><br/>
+لما رجع وقعد قدامه وحط الشاي على الترابيزة الصغيرة، أدهم مدّ إيده وأخرج الجواب من جيبه وحطه على الترابيزة بين الاتنين.
+<br/><br/>
+عمه نظر إليه. مش للجواب. لأدهم. بصة صغيرة ومحددة.
+<br/><br/>
+<span class="dialogue">— من فين جبت ده؟</span>
+<br/>
+<span class="dialogue">— من دراج جدي.</span>
+<br/><br/>
+<span class="part-title">— جزء تالت —</span>
+صمت. مش صمت حد مش عارف، صمت حد بيفكر يقول إيه.
+<br/><br/>
+<span class="dialogue">— قريته؟</span>
+<br/>
+<span class="dialogue">— آه.</span>
+<br/>
+<span class="dialogue">— كله؟</span>
+<br/>
+<span class="dialogue">— كله.</span>
+<br/><br/>
+عمه كمال قام وراح الشباك. وقف شوية بيبص بره. الشجرة الجميز كانت بتتحرك ببطء في نسمة الصبح.
+<br/><br/>
+<span class="dialogue">— إنت عارف إنك بتفتح باب؟</span>
+<br/>
+<span class="dialogue">— عارف. وعايز أعرف في إيه وراه.</span>
+<br/>
+<span class="dialogue">— ومش خايف مما في وراه؟</span>
+<br/>
+<span class="dialogue">— يمكن.</span>
+<br/><br/>
+عمه اتحول ونظر إليه.
+<br/><br/>
+<span class="dialogue">— نزهة كانت صاحبة أبوك من زمان. من قبل ما أبوك يتجوز أمك.</span>
+<br/><br/>
+<span class="part-title">— جزء رابع —</span>
+اللحظة دي كانت غريبة. أدهم حس إنه توقع حاجة من النوع ده — جزء في دماغه كان يحسب الاحتمالات — بس لما الجواب اتقال بصوت عالي، بقى أثقل مما كان في تصوره.
+<br/><br/>
+<span class="dialogue">— صاحبته؟ يعني قريبة؟</span>
+<br/>
+<span class="dialogue">— أكتر من صاحبة. لكن مش المعنى اللي في بالك. الموضوع أعقد من كده.</span>
+<br/>
+<span class="dialogue">— اشرح.</span>
+<br/><br/>
+عمه رجع وقعد. شعل سيجارة. أخد نفس طويل.
+<br/><br/>
+<span class="dialogue">— أبوك وهو شاب، قبل ما يتخرج من الهندسة، كان بيعرف نزهة من الجامعة. هي كانت في طب. هما تصاحبوا بجد — يعني كانوا بيقولوا إنهم هيتجوزوا. ده كان أواخر التمانينات.</span>
+<br/><br/>
+<span class="dialogue">— وإيه؟</span>
+<br/>
+<span class="dialogue">— وأبوك — أبوك وقتها ما كانش اللي إنت عارفه دلوقتي. كان أكتر انبساطاً وأقل ثباتاً. والجد — جد ربنا يرحمه — ما كانش موافق.</span>
+<br/>
+<span class="dialogue">— ليه؟</span>
+<br/>
+<span class="dialogue">— أسباب. زمانها. الأسرة دي. الأسرة تلك. حسابات ناس في وقت معين بيعملوا حسابات بطريقة معينة.</span>
+<br/><br/>
+<span class="part-title">— جزء خامس —</span>
+أدهم بص في كوبايت الشاي. الشاي اتبرد شوية.
+<br/><br/>
+<span class="dialogue">— يعني الجد منعه؟</span>
+<br/>
+<span class="dialogue">— "منع" كلمة قوية. ضغط. وأبوك كان برضو في وقتها... كان في ضغوط تانية. المشوار، الشغل، وضعه الاقتصادي. الأمور ما كانتش سهلة.</span>
+<br/>
+<span class="dialogue">— وانفصلوا.</span>
+<br/>
+<span class="dialogue">— انفصلوا.</span>
+<br/>
+<span class="dialogue">— وأبويا اتجوز أمي.</span>
+<br/>
+<span class="dialogue">— بعدها بسنتين تقريباً، آه.</span>
+<br/><br/>
+صمت. تاني. بس المرة دي كان أدهم اللي مش عارف يتكلم.
+<br/><br/>
+<span class="dialogue">— وإيه دخل الجد بالجواب؟</span>
+<br/>
+عمه سحب من السيجارة.
+<br/><br/>
+<span class="dialogue">— لأن الجواب مش لأبوك. الجواب للجد.</span>
+<br/><br/>
+<span class="part-title">— جزء سادس —</span>
+أدهم قرأ الجواب تاني. وصح — الجواب كان مكتوب لـ"سليمان". الجد كان اسمه سليمان. مش الأب.
+<br/><br/>
+<span class="dialogue">— هي كتبت للجد ليه؟</span>
+<br/>
+<span class="dialogue">— لأن بعد ما انتهى الموضوع بين أبوك ونزهة، بقى في موضوع تاني. موضوع بين نزهة والجد.</span>
+<br/>
+<span class="dialogue">— موضوع إيه؟</span>
+<br/>
+<span class="dialogue">— ده اللي أنا مش هقدر أقوله.</span>
+<br/><br/>
+أدهم بص فيه.
+<br/><br/>
+<span class="dialogue">— مش هتقدر ولا مش هتقول؟</span>
+<br/><br/>
+عمه كمال ما رد. الفرق بين الاتنين كبير. وعدم الرد في حد ذاته كان رد.
+<br/><br/>
+<span class="dialogue">— يا عمي، الجد مات. الأسرار اللي معاه مش محتاجة تموت معاه. لو في حاجة اتعملت واتأثر بيها ناس، أنا عايز أعرف.</span>
+<br/><br/>
+كمال أطفأ السيجارة وقام.
+<br/><br/>
+<span class="dialogue">— روح كلم أبوك.</span>
+<br/>
+<span class="dialogue">— أبويا مش عارف؟</span>
+<br/>
+<span class="dialogue">— أبوك مش عارف كل حاجة. بس أبوك لازم يكون أول واحد يعرف إنك شايل الجواب ده.</span>
+<br/><br/>
+<span class="part-title">— جزء سابع —</span>
+أدهم خرج من بيت عمه كمال والشمس كانت دلوقتي جنح على الوسط. الشارع الضيق كان فيه عربيات واقفة على الجانبين وطفل بيلعب بكورة بلاستيك لوحده. الجميز كانت بترمي ضل خفيف على الرصيف.
+<br/><br/>
+مشى ببطء. ما اتصلش بتاكسي. أراد يمشي. المشي بيساعد على التفكير — أقل من القعاد وأكتر من الجري.
+<br/><br/>
+أبوه. محمد صبري. الرجل الهادي اللي ما بيتكلمش كتير. الرجل اللي أدهم عمره ما شاف فيه انفعال زيادة عن اللازم. الرجل اللي دايماً قاعد وراقي وحكيم.
+<br/><br/>
+الرجل اللي — اكتشف أدهم دلوقتي — كان عنده قصة قبل ما يبقى "الرجل".
+<br/><br/>
+ده مش غريب، أدهم عارف. كل واحد عنده حياة قبل ما يبقى "الأب". بس في فرق بين إنك تعرف الحقيقة دي كمفهوم وبين إنك تلاقيها مجسمة وجنبها جواب مطوي في دراج.
+<br/><br/>
+الجواب كان مكتوب للجد. نزهة كتبت للجد.
+<br/><br/>
+إيه اللي عمله الجد؟`
+  },
+  {
+    title: 'الفصل الثالث — أبويا من زمان',
+    preview: '⚡ المواجهة مع الأب تفتح أبواب موصدة من سنين...',
+    content: `<span class="part-title">— جزء أول —</span>
+محمد صبري ما كانش متوقع ابنه الساعة دي. كان بيقرأ جريدة — ده عاداه في بعد الضهر، يقعد وحده في الأوضة ويقرأ جريدة أو كتاب وحاجة ساخنة جنبه — لما أدهم دخل وقعد قدامه من غير ما يسلم أول.
+<br/><br/>
+الأب شال نضاراته وبص.
+<br/><br/>
+<span class="dialogue">— في إيه؟</span>
+<br/>
+<span class="dialogue">— عايز أتكلم معاك.</span>
+<br/>
+<span class="dialogue">— تكلم.</span>
+<br/><br/>
+أدهم وضع الجواب على الترابيزة. الجواب بقى زي بطاقة أدهم بيقدم بيها نفسه في كل لقاء.
+<br/><br/>
+الأب بص فيه. وفي اللحظة دي — اللحظة دي بالظبط — أدهم شاف حاجة. شاف تغيير حقيقي في وش أبيه. مش زي عمه كمال اللي كانت اللحظة صغيرة ومحدودة. ده كان تغيير أعمق. زي حد بيتذكر حاجة كان نسيها أو كان بيحاول ينساها.
+<br/><br/>
+<span class="dialogue">— من فين؟</span>
+<br/>
+<span class="dialogue">— أوضة جدي.</span>
+<br/><br/>
+<span class="part-title">— جزء تاني —</span>
+الأب قام. وده بالنسبه لأدهم حاجة مش عادية — أبوه مش راجل كتير الحركة في المواقف الصعبة. عادة بيقعد ويتكلم بهدوء. لما قام ده كان معناه إن الموضوع أكبر من "بيقدر يتعامل معاه قاعد".
+<br/><br/>
+راح المطبخ. أدهم سمع صوت ميه بتتسكب. رجع بكوباية ميه بارد. شرب. قعد.
+<br/><br/>
+<span class="dialogue">— نزهة... ما اتذكرتهاش من زمان.</span>
+<br/>
+<span class="dialogue">— بس عارفها.</span>
+<br/>
+<span class="dialogue">— كنت عارفها. من سنين بعيدة.</span>
+<br/>
+<span class="dialogue">— عمي كمال قالي.</span>
+<br/>
+الأب بص فيه.
+<br/>
+<span class="dialogue">— قالك إيه بالظبط؟</span>
+<br/>
+<span class="dialogue">— قالي إنك كنت قرايب منها وإن جدي ما كانش موافق وإن الموضوع انتهى. وقالي إن في موضوع تاني بين نزهة والجد بس ما عرفنيش إيه.</span>
+<br/><br/>
+<span class="part-title">— جزء تالت —</span>
+الأب سكت فترة. مش طويلة. بس في الصمت دة كانت حاجات بتتقال ما بتتقالش.
+<br/><br/>
+<span class="dialogue">— هي كانت بنت محترمة. هي كانت... في ناس بيمروا في حياتك وبيسيبوا أثر وبيفضلوا في الأثر حتى لو الناس مشيت.</span>
+<br/><br/>
+ده كان كلام كتير على معايير أبوه.
+<br/><br/>
+<span class="dialogue">— أبويا، الجواب ده مش مكتوبلك. مكتوب للجد.</span>
+<br/>
+<span class="dialogue">— عارف.</span>
+<br/>
+<span class="dialogue">— يعني إنت عارف إن في موضوع بين نزهة والجد؟</span>
+<br/>
+<span class="dialogue">— أعرف جزء.</span>
+<br/>
+<span class="dialogue">— قولي.</span>
+<br/><br/>
+الأب نظر إليه بعيون تقيّمه. مش بيفكر يقول ولا لأ. بيفكر كيف يقول.
+<br/><br/>
+<span class="dialogue">— لما نزهة وأنا بنّا مسافة بيننا، هي ما رحتش بعيد. يعني هي فضلت في حياة الأسرة، بس بطريقة تانية. هي كانت قريبة من جدك. كانت بتزوره وبتسأل عليه. الناس كانوا يشوفوا ده غريب بس أنا ما استغربتش.</span>
+<br/>
+<span class="dialogue">— ليه؟</span>
+<br/>
+<span class="dialogue">— لأن جدك كان عنده حاجة عارفها عنها. حاجة ما قالهاليش.</span>
+<br/><br/>
+<span class="part-title">— جزء رابع —</span>
+الكلام ده كان فاتح بوابة لكن ما بيديش المفتاح. أدهم محتاج أكتر.
+<br/><br/>
+<span class="dialogue">— أبويا، أنا مش بسألك عشان أحكم على حد. أنا بسألك عشان في الجواب ده في حاجات بتقول إن في سر، وأنا حاسس إن السر ده مش بس قصة حب انتهت. في حاجة تانية.</span>
+<br/><br/>
+الأب قام تاني. المرة دي راح الرف وبدأ يدور. إيده بتعدي على الكتب وهو بيدور. لاقى حاجة في ضلع تاني. ورقة في جوه كتاب. أخرجها وجاب بيها وقعد وحطها قدام أدهم.
+<br/><br/>
+<span class="dialogue">— ده عنوانها. من سنين. مش عارف لو صح لسه.</span>
+<br/><br/>
+<span class="part-title">— جزء خامس —</span>
+ورقة صغيرة. مكتوب عليها عنوان في حي الزيتون. وتليفون قديم — رقم سبع أرقام من غير كود. تليفون من قبل ما يبقى أرقام عشرة.
+<br/><br/>
+<span class="dialogue">— ليه محتفظ بده؟</span>
+<br/>
+<span class="dialogue">— لأنني... لأن في أوقات كنت أتمنى إني أتصل. ما اتصلتش. بس ما رميتش الورقة.</span>
+<br/><br/>
+ده كان أكتر من حاجة اتوقعها أدهم من أبوه.
+<br/><br/>
+<span class="dialogue">— تبعتها بعد ما انفصلتوا؟</span>
+<br/>
+<span class="dialogue">— آه. بعد كده بسنة. بعت لها خطاب. واحد بس.</span>
+<br/>
+<span class="dialogue">— وهي؟</span>
+<br/>
+<span class="dialogue">— ما ردتش.</span>
+<br/><br/>
+الكلمة دي — "ما ردتش" — وقفت في الهوا. مش بحزن، بيقين.
+<br/><br/>
+<span class="dialogue">— وبعدين؟</span>
+<br/>
+<span class="dialogue">— بعدين تجوزت أمك. وحييت حياتي.</span>
+<br/><br/>
+<span class="part-title">— جزء سادس —</span>
+أدهم أخد الورقة. العنوان في الزيتون — حي قريب نسبياً.
+<br/><br/>
+<span class="dialogue">— هروح أدور عليها.</span>
+<br/>
+<span class="dialogue">— أدهم...</span>
+<br/>
+<span class="dialogue">— أبويا، الجواب ده موجود. ده معناه إنها كتبت. وده معناه إنها كانت عايزة تقول حاجة. والجد — يمكن ما ردش، يمكن ردّ بطريقة تانية. بس في حاجة اتعملت ومش اتقالت.</span>
+<br/><br/>
+الأب بص فيه طويل.
+<br/><br/>
+<span class="dialogue">— إنت زيك زي جدك. هو كمان كان بيحب يعرف.</span>
+<br/>
+<span class="dialogue">— وده بيزعلك؟</span>
+<br/>
+<span class="dialogue">— لا. بيخوفني.</span>
+<br/><br/>
+<span class="part-title">— جزء سابع —</span>
+أدهم خرج. الشارع كان في آخر النهار. الشمس بتنزل والضل بيكبر.
+<br/><br/>
+وقف لحظة قدام البيت. فكر في الأب قاعد جوه. الرجل اللي عنده أربعة وخمسين سنة وكان زمان شاب في الجامعة بيحب ست اسمها نزهة وتركها أو تركته — مش واضح كويس مين اللي ترك — وعاش حياته كاملة ولسه عنده ورقة فيها عنوانها.
+<br/><br/>
+الحياة كيف بتشتغل؟ بتاخد منك حاجات وبتسيب فيك أثرها. بتعديها وبتفضل في حتة موجودة، مش بتمشي.
+<br/><br/>
+في تاكسي راجع البيت، أدهم فتح موبايله وبدأ يدور على العنوان في خرايط جوجل. الزيتون. شارع فلاني. العمارة رقم كذا.
+<br/><br/>
+كان موجوداً.
+<br/><br/>
+<span class="part-title">— جزء تامن —</span>
+في البيت، سلمى لاحظته.
+<br/><br/>
+<span class="dialogue">— إنت بتعمل إيه؟</span>
+<br/>
+<span class="dialogue">— بدور على حاجة.</span>
+<br/>
+<span class="dialogue">— على إيه؟</span>
+<br/><br/>
+أدهم فكر ثانية. سلمى أخته. صغر في السن مش صغر في الفهم.
+<br/><br/>
+<span class="dialogue">— لاقيت جواب في أوضة جدي. من ست اسمها نزهة.</span>
+<br/>
+<span class="dialogue">— ومين نزهة؟</span>
+<br/>
+<span class="dialogue">— حد كان في حياة الأسرة من زمان. أبويا كان يعرفها. الجد كان يعرفها. وفي سر مش اتقالش.</span>
+<br/>
+<span class="dialogue">— وإنت رايح تتكشف السر.</span>
+<br/>
+<span class="dialogue">— آه.</span>
+<br/>
+<span class="dialogue">— ومش خايف اللي هتلاقيه؟</span>
+<br/><br/>
+ده كان نفس السؤال اللي عمه كمال سأله. الناس كلها شايفة إنه لازم يخاف. وأدهم فعلاً خايف. بس الخوف مش سبب كافي يوقفه.
+<br/><br/>
+<span class="dialogue">— خايف. بس مش هيوقفني.</span>
+<br/><br/>
+سلمى بصتله.
+<br/><br/>
+<span class="dialogue">— أنا جاية معاك.</span>
+<br/><br/>
+وده كان أحسن جملة سمعها من أول ما بدأت القصة.`
+  },
+  {
+    title: 'الفصل الرابع — نزهة',
+    preview: '🔥 وجه لوجه مع الست اللي غيرت كل حاجة...',
+    content: `<span class="part-title">— جزء أول —</span>
+الزيتون حي بيعرف نفسه بنفسه. ما بيحتاجش حد يعرّفه. في عمارات قديمة وشوارع فيها أشجار وجيران بيعرفوا بعض من جيل لجيل. حي من الحيات اللي القاهرة القديمة كانت مبنية عليها قبل ما العمران يبلع كل حاجة.
+<br/><br/>
+أدهم وسلمى وقفوا قدام العمارة. عمارة من الستينات على الأقل. الدهان ابيض بأصفر من كتر السنين. في ريحة مياه ونبات من السلم الداخلي.
+<br/><br/>
+<span class="dialogue">— الدور التالت.</span>
+<br/>
+سلمى قرأت على الورقة.
+<br/><br/>
+<span class="dialogue">— آه.</span>
+<br/>
+<span class="dialogue">— وإنت مش عارف لو هي لسه ساكنة هنا.</span>
+<br/>
+<span class="dialogue">— مش عارف.</span>
+<br/>
+<span class="dialogue">— وممكن ما حدش يفتح.</span>
+<br/>
+<span class="dialogue">— ممكن.</span>
+<br/>
+<span class="dialogue">— وممكن متوفية.</span>
+<br/>
+<span class="dialogue">— سلمى.</span>
+<br/>
+<span class="dialogue">— بس الاحتمالات.</span>
+<br/>
+<span class="dialogue">— عارف. طلعي معايا.</span>
+<br/><br/>
+<span class="part-title">— جزء تاني —</span>
+الدرج كان بيصدر أصوات لكن ما كانش بيئن زي درج بيت الجد. ده كان صوت تاني — صوت بيت فيه ناس لسه بيستخدموه بانتظام.
+<br/><br/>
+الدور التالت. بابين. رقم واحد وستة ورقم واحد وسبعة.
+<br/><br/>
+الورقة ما كانتش بتقول رقم الشقة. بس في رقم تليفون. أدهم دق الجرس في الشقة الأولى.
+<br/><br/>
+الباب اتفتح. ست في العقد الستيني، شعر أبيض مقصوص قصير، تلبس جلباب بيت. بتبص فيهم بعيون واسعة وتساؤل.
+<br/><br/>
+<span class="dialogue">— ايوه؟</span>
+<br/>
+<span class="dialogue">— آسف يا ستي على الإزعاج. بندور على حد اسمه نزهة الشرقاوي.</span>
+<br/><br/>
+الست بصت فيهم. بعدين نقلت بصرها من وشه لوش سلمى وعملت بفمها حاجة — مش ابتسامة ومش استغراب. حاجة في النص.
+<br/><br/>
+<span class="dialogue">— إنتوا مين؟</span>
+<br/>
+<span class="dialogue">— أنا أدهم صبري. جدي كان الحاج سليمان صبري. جدي اتوفي منذ قريب وأنا لاقيت جواب...</span>
+<br/><br/>
+الست رفعت إيدها.
+<br/><br/>
+<span class="dialogue">— تعالوا جوه.</span>
+<br/><br/>
+<span class="part-title">— جزء تالت —</span>
+الشقة كانت أنيقة وهادية. فرش كلاسيك ونضيف. ستاير بيضا والنور بييجي من الشباك بشكل لطيف. على الرف كتب كتير وصور.
+<br/><br/>
+الست — اللي فهموا بعدين إنها أخت نزهة، اسمها سعاد — حطت أمامهم شاي من غير ما تتكلم وقعدت قدامهم.
+<br/><br/>
+<span class="dialogue">— سليمان بيه مات؟</span>
+<br/>
+<span class="dialogue">— آه يا ستي. منذ ثلاث أسابيع.</span>
+<br/>
+<span class="dialogue">— ربنا يرحمه. كان ضلع تقيل.</span>
+<br/><br/>
+الكلمة دي — "ضلع تقيل" — بتقال في المديح. يعني إنسان محترم وكلمته بتتسمع. بس في نبرة سعاد كانت في حاجة تانية. مش مديح بس.
+<br/><br/>
+<span class="dialogue">— ستي سعاد، أنا لاقيت جواب في دراج جدي. من نزهة هانم. الجواب من سنة ألفين وواحد.</span>
+<br/><br/>
+سعاد شربت من الشاي.
+<br/><br/>
+<span class="dialogue">— نزهة كتبت الجواب ده وأنا مش عارفة أوقتها. لقيته بعد كده في أوراقها.</span>
+<br/>
+<span class="dialogue">— في أوراقها؟</span>
+<br/>
+<span class="dialogue">— نزهة... نزهة ماتت. من سبع سنين.</span>
+<br/><br/>
+<span class="part-title">— جزء رابع —</span>
+الكلمة اتقالت وقعت على الاتنين بثقل. سلمى حركت إيدها ببطء ولمست ذراع أخوها.
+<br/><br/>
+<span class="dialogue">— ربنا يرحمها.</span>
+<br/>
+أدهم قالها بصوت هادي.
+<br/><br/>
+<span class="dialogue">— ربنا يرحمها.</span>
+<br/>
+سعاد ردت ببساطة.
+<br/><br/>
+صمت.
+<br/><br/>
+<span class="dialogue">— أنا عايز أفهم. مش عايز أجرح ولا أفتح جروح. بس في الجواب حاجات بتقول إن في سر. وأنا حاسس إن السر ده له علاقة بأسرتي وأنا محتاج أعرف.</span>
+<br/><br/>
+سعاد بصت من الشباك. الشارع. الشجرة الكافور اللي برا.
+<br/><br/>
+<span class="dialogue">— نزهة... نزهة كانت بتحب أبوك. ده مش سر. وأبوك كان بيحبها. وانفصلوا. ده برضو مش سر. السر...</span>
+<br/><br/>
+وقفت.
+<br/><br/>
+<span class="dialogue">— ستي سعاد.</span>
+<br/>
+<span class="dialogue">— السر إن انفصالهم ما كانش قرار نزهة. ولا قرار أبوك. كان قرار جدك.</span>
+<br/><br/>
+<span class="part-title">— جزء خامس —</span>
+<span class="dialogue">— قرار الجد بأي معنى؟</span>
+<br/><br/>
+سعاد اتكأت للأمام.
+<br/><br/>
+<span class="dialogue">— جدك جاء لأبي. جاء هنا، في الشقة دي، وقعد مع والدي وقاله إن الموضوع مش هينفع. وقال أسباب. أسباب كلها كانت عن حسابات الدنيا. المستوى. الأسرة. المصالح. وأبي — الله يرحمه — كان إنسان جيله، سمع وما ردش. وانتهى الأمر.</span>
+<br/>
+<span class="dialogue">— وأبويا ما عرفش؟</span>
+<br/>
+<span class="dialogue">— أبوك عرف إن الأمور بقت صعبة. بس ما عرفش إن أبيه جاء وتكلم. قُلتِلوش إن الظروف.</span>
+<br/><br/>
+<span class="dialogue">— وبعدين؟</span>
+<br/>
+<span class="dialogue">— بعدين... بعد ما أبوك تجوز، نزهة فضلت لوحدها. ما تجوزتش. درست، اشتغلت دكتورة أطفال. كانت بتحب شغلها وكانت بتحب الأولاد. وكانت بتزور الحاج سليمان.</span>
+<br/><br/>
+أدهم بص.
+<br/><br/>
+<span class="dialogue">— ليه كانت بتزوره؟</span>
+<br/><br/>
+<span class="part-title">— جزء سادس —</span>
+سعاد قامت. راحت الأوضة الجوانية وأدهم سمع صوت درج بيتفتح. رجعت بصندوق صغير خشب بني اللون.
+<br/><br/>
+فتحته وأخرجت ورقة.
+<br/><br/>
+<span class="dialogue">— ده ما كنتش أعرفه إلا بعد ما نزهة ماتت. لقيته في أوراقها.</span>
+<br/><br/>
+الورقة. شهادة ميلاد.
+<br/><br/>
+أدهم أخدها وقرأ. وقرأ تاني. وقرأ تالت.
+<br/><br/>
+الاسم. التاريخ. اسم الأم. اسم الأب.
+<br/><br/>
+<span class="dialogue">— ده...</span>
+<br/>
+<span class="dialogue">— آه.</span>
+<br/>
+سلمى بصت على الورقة وعيونها اتسعت.
+<br/><br/>
+<span class="dialogue">— ده معناه إن في...</span>
+<br/>
+<span class="dialogue">— آه. نزهة كانت حامل لما انفصلت عن أبوك. ما قالتش لحد. وولدت. وربّت ابنها لوحدها.</span>
+<br/><br/>
+<span class="part-title">— جزء سابع —</span>
+الشقة بقت ساكتة بشكل مختلف.
+<br/><br/>
+<span class="dialogue">— وابنها؟</span>
+<br/>
+أدهم سمع صوته بيسأل وكأنه مش هو اللي بيسأل.
+<br/><br/>
+<span class="dialogue">— اسمه طارق. عنده دلوقتي ستة وعشرين سنة. يعني...</span>
+<br/>
+<span class="dialogue">— زيّ عمري.</span>
+<br/>
+<span class="dialogue">— آه.</span>
+<br/><br/>
+سلمى مسكت إيد أخوها. ما اتكلمتش. بس مسكت إيده.
+<br/><br/>
+<span class="dialogue">— وطارق... هو عارف؟</span>
+<br/>
+<span class="dialogue">— عارف إن أبوه مات قبل ما يولد. ده اللي نزهة قالتهوله. ما كانتش عايزه يبحث ويتألم.</span>
+<br/><br/>
+<span class="dialogue">— بس الحقيقة تانية.</span>
+<br/>
+<span class="dialogue">— الحقيقة إن أبوه موجود. وما يعرفش.</span>
+<br/><br/>
+<span class="dialogue">— والجد. الجد كان عارف؟</span>
+<br/><br/>
+سعاد بصت فيه بعيون تعبانة.
+<br/><br/>
+<span class="dialogue">— عشان كده نزهة كانت بتزوره. الجد اكتشف بعد سنين. وكان بيساعدها هادياً — ماياً، حاجات صغيرة. من غير ما حد يعرف. وهي كتبت له الجواب ده لما حست إنها ما تقدرش تكمل الوضع.</span>
+<br/><br/>
+<span class="part-title">— جزء تامن —</span>
+الثلاثة قعدوا في الشقة وقت طويل. سعاد وأدهم وسلمى. الشاي بات. والضل بره بدأ يطول.
+<br/><br/>
+في لحظة، أدهم حس بحاجة غريبة. إنه مش مصدوم. يعني صدمة موجودة — ده مش كلام صغير. بس في حاجة تانية. حاجة زي إن اللغز اللي كان ناقص قطعة، القطعة دي وقعت في مكانها.
+<br/><br/>
+<span class="dialogue">— طارق فين دلوقتي؟</span>
+<br/>
+<span class="dialogue">— بيشتغل في مكتبة. مكتبة في وسط البلد. هو بيحب الكتب — زي أمه.</span>
+<br/><br/>
+<span class="dialogue">— هو شايفني؟ يعني لو قيته وتكلمته؟</span>
+<br/>
+<span class="dialogue">— ما أدريش. هو ما بيحبش الحديث عن أبيه. بس إنت... إنت مش "موضوع الأب". إنت...</span>
+<br/><br/>
+وقفت سعاد.
+<br/><br/>
+<span class="dialogue">— إنت أخوه.</span>`
+  },
+  {
+    title: 'الفصل الخامس — طارق والورقة الأخيرة',
+    preview: '🌟 الأخ اللي ما عرفوش... واللقاء اللي غيّر كل حاجة',
+    content: `<span class="part-title">— جزء أول —</span>
+المكتبة كانت في شارع جانبي ورا ميدان عبد المنعم رياض. مكتبة صغيرة على الرصيف. مش من النوع اللي واجهته زجاج وفيها تكييف. من النوع اللي الكتب مرتبة في رفوف خشب والرائحة فيها كتب قديمة ومطبعة. النوع اللي إنت قبل ما تشتري من جوه بتحب تقف برا وتتفرج على الواجهة.
+<br/><br/>
+أدهم وقف برا شوية. سلمى جنبيه. الاتنين ما اتكلموش من لما ركبوا الأوبر جاي.
+<br/><br/>
+<span class="dialogue">— مستعد؟</span>
+<br/>
+سلمى سألت.
+<br/><br/>
+<span class="dialogue">— مش عارف.</span>
+<br/>
+<span class="dialogue">— ده إجابة صح.</span>
+<br/><br/>
+دخلوا.
+<br/><br/>
+<span class="part-title">— جزء تاني —</span>
+داخل المكتبة كان مرتب بطريقة شخصية — مش بطريقة شركة. الكتب مرتبة بتبويبات مكتوبة بخط اليد على ورق ملصوق بالرف: "روايات"، "تاريخ"، "شعر"، "فلسفة"، "ترجمات".
+<br/><br/>
+في شاب وراء ترابيزة في الآخر. شعره أسود قصير، نضارة رفيعة. بيقرأ. لما سمع صوت داخلين رفع رأسه.
+<br/><br/>
+أدهم نظر إليه. وفي اللحظة دي حصل حاجة مش متوقعة. حاجة ما كانش قرأ عنها ولا شافها في الأفلام. حاجة في الوجه. في الطريقة اللي الاتنين بيبصوا بيها.
+<br/><br/>
+الشاب بص فيهم باهتمام.
+<br/><br/>
+<span class="dialogue">— ايوه؟</span>
+<br/>
+<span class="dialogue">— أنا بدور على كتاب.</span>
+<br/>
+أدهم قالها وهو شايف إنها جملة مش كافية بس محتاجها عشان يكسب وقت.
+<br/><br/>
+<span class="dialogue">— إيه الكتاب؟</span>
+<br/><br/>
+<span class="part-title">— جزء تالت —</span>
+تكلموا عن كتاب. أدهم ذكر اسم روائي مصري عرفه — نجيب محفوظ. الشاب قاله عندنا حاجات. وقام يدور. وأدهم تبعه.
+<br/><br/>
+وفي الرف، واقفين جنب بعض، أدهم قال:
+<br/><br/>
+<span class="dialogue">— اسمي أدهم. أدهم صبري.</span>
+<br/><br/>
+الشاب بص فيه.
+<br/><br/>
+<span class="dialogue">— طارق.</span>
+<br/>
+<span class="dialogue">— طارق مين؟</span>
+<br/>
+<span class="dialogue">— طارق نزهة.</span>
+<br/><br/>
+الجملة دي. "طارق نزهة." حد بيقول اسمه واسم أمه جوه اسمه. ده حد ما بيحطش اسم الأب في التعريف.
+<br/><br/>
+<span class="dialogue">— أنا عارفك.</span>
+<br/>
+الجملة طلعت من أدهم قبل ما يفكر. وبعد ما اتقالت، ما قدرش يرجع.
+<br/><br/>
+<span class="dialogue">— من فين؟</span>
+<br/>
+<span class="dialogue">— من حكاية طويلة. ممكن أحكيهالك؟</span>
+<br/><br/>
+<span class="part-title">— جزء رابع —</span>
+طارق بص فيه بعيون ما تقراش سريع. بعدين بص في سلمى اللي كانت واقفة في الخلف. بعدين رجع أدهم.
+<br/><br/>
+<span class="dialogue">— تعالوا اقعدوا.</span>
+<br/><br/>
+في ركن في المكتبة في كرسيين قديمين وترابيزة صغيرة عليها فنجان قهوة. طارق جاب كرسي تالت وقعد.
+<br/><br/>
+وأدهم حكى. حكى كل حاجة. من الجواب. من عمه كمال. من أبيه. من سعاد. من شهادة الميلاد.
+<br/><br/>
+حكى ببطء وبترتيب. مش بإيمو كتير. بس بوضوح.
+<br/><br/>
+وطارق سمع. ما قطعش. عيونه كانت ثابتة ومركزة. زي حد بيسمع درس مهم.
+<br/><br/>
+لما أدهم خلّص، صمت.
+<br/><br/>
+<span class="part-title">— جزء خامس —</span>
+الصمت دام دقائق. طارق شال الفنجان وشرب. وضعه. وبص في إيده.
+<br/><br/>
+<span class="dialogue">— أمي قالتلي إن أبي مات.</span>
+<br/>
+<span class="dialogue">— عارف.</span>
+<br/>
+<span class="dialogue">— وإنت بتقولي إنه لسه حي.</span>
+<br/>
+<span class="dialogue">— آه.</span>
+<br/><br/>
+طارق بص في الرف اللي قدامه. كتاب عن الفلسفة اليونانية. بص فيه بعيون مش بتقرأ.
+<br/><br/>
+<span class="dialogue">— أنا... أنا كنت دايماً حاسس إن في حاجة ناقصة في الحكاية. ناس بتتكلم وبتوقف. أسئلة ما بتتجاوبش. أمي — ربنا يرحمها — كانت إنسانة كاملة. بس في الموضوع ده كان عندها حاجة بتحجزها.</span>
+<br/><br/>
+<span class="dialogue">— هي كانت بتحميك.</span>
+<br/>
+<span class="dialogue">— عارف. بس الحماية أحياناً بتاخد منك حاجة مع ما بتديك.</span>
+<br/><br/>
+<span class="part-title">— جزء سادس —</span>
+سلمى اللي ما اتكلمتش طول الوقت قالت:
+<br/><br/>
+<span class="dialogue">— إنت عايز تعرف؟</span>
+<br/>
+طارق بص فيها.
+<br/><br/>
+<span class="dialogue">— بمعنى إيه؟</span>
+<br/>
+<span class="dialogue">— عايز تقابل أبوك؟</span>
+<br/><br/>
+طارق ما رد فوراً. بص في الهوا قدامه.
+<br/><br/>
+<span class="dialogue">— مش عارف. ده سؤال كبير على دقيقتين.</span>
+<br/>
+<span class="dialogue">— طبعاً. ما أنا ما بطلبش منك تجاوب دلوقتي.</span>
+<br/><br/>
+أدهم قال:
+<br/><br/>
+<span class="dialogue">— أنا ما جيتش هنا عشان أبوي. جيت عشان أنا. عشان لاقيت جواب وأنا كنت محتاج أفهم. وفضلت أمشي وألاقي. لحد ما وصلتلك.</span>
+<br/><br/>
+<span class="dialogue">— وإنت عارف إنت لاقيت إيه؟</span>
+<br/>
+<span class="dialogue">— إني عندي أخ ما عرفتوش.</span>
+<br/><br/>
+<span class="part-title">— جزء سابع —</span>
+الكلمة دي — "أخ" — وقفت في الهوا زي الدخان. مش بتتلاشى. بتفضل.
+<br/><br/>
+طارق بص في أدهم. عيون بيتأملوا. بيتحققوا. بيوزنوا.
+<br/><br/>
+<span class="dialogue">— إنت مش خايف إني أرفض الموضوع كله؟</span>
+<br/>
+<span class="dialogue">— خايف. بس ما قدرتش ما ييجيش.</span>
+<br/>
+<span class="dialogue">— ليه؟</span>
+<br/>
+<span class="dialogue">— لأن لو أنا في مكانك، كنت هيجيلي حد يقولي.</span>
+<br/><br/>
+طارق نظر إليه ثانية. ثم نظر إلى سلمى.
+<br/><br/>
+<span class="dialogue">— إنتوا التنين إخوتي؟</span>
+<br/>
+<span class="dialogue">— إيه ما أنا جايالك. وهي برضو جايالك.</span>
+<br/><br/>
+<span class="part-title">— جزء تامن —</span>
+طارق قام وراح ورا الترابيزة. دور في درج وأخرج حاجة. رجع وحطها على الترابيزة.
+<br/><br/>
+صورة. صورة قديمة. امرأة شابة ووراها مجموعة. أدهم نظر فيها.
+<br/><br/>
+المرأة كانت نزهة. والجماعة ورايها كانوا ناس.
+<br/><br/>
+وفي ركن الصورة، في الطرف، في واحد كان أدهم قدر يتعرف عليه حتى لو في شبابه وحتى لو الصورة صغيرة.
+<br/><br/>
+الجد.
+<br/><br/>
+<span class="dialogue">— ده جدي.</span>
+<br/>
+<span class="dialogue">— عارف. أمي كانت بتقولي عليه. كانت بتقول "جدك سليمان". كنت أظن هي بتتكلم تعبيراً.</span>
+<br/><br/>
+أدهم بص فيه.
+<br/><br/>
+<span class="dialogue">— ما كانتش تعبير.</span>
+<br/>
+<span class="dialogue">— عارف دلوقتي.</span>
+<br/><br/>
+<span class="part-title">— جزء تاسع —</span>
+خرجوا الثلاثة من المكتبة مع بعض. الشارع كان مزدحم بالوقت ده — الناس راجعة من شغلها. صوت العربيات والباعة والحياة اليومية اللي ما بتوقفش.
+<br/><br/>
+وقفوا على الرصيف.
+<br/><br/>
+<span class="dialogue">— إيه اللي بيحصل دلوقتي؟</span>
+<br/>
+طارق سأل. سؤال واضح وما فيش فيه تعقيد.
+<br/><br/>
+<span class="dialogue">— مش عارف بالظبط. بس في حاجة اتبنت النهارده ما كانتش موجودة أمبارح.</span>
+<br/>
+<span class="dialogue">— وأبوي؟ يعني محمد صبري؟</span>
+<br/>
+<span class="dialogue">— أبويا ما يعرفش إني جيتلك. وما يعرفش إنك موجود. ده قرارك — لو عايز يعرف أو لأ.</span>
+<br/>
+<span class="dialogue">— وإنت؟</span>
+<br/>
+<span class="dialogue">— أنا قولتلك اللي أنا محتاج أقوله. باقي الطريق، إنت اللي تختار.</span>
+<br/><br/>
+<span class="part-title">— جزء عاشر —</span>
+بعد أسبوع.
+<br/><br/>
+أدهم قاعد في شقة أهله. الأسرة موجودة. أبوه. أمه. سلمى. وعمه كمال.
+<br/><br/>
+وفي الباب، طارق.
+<br/><br/>
+الباب اتفتح وطارق دخل وأدهم قدّمه ببساطة. ما أطال. ما بالغ. قال اسمه وقال اللي لازم يتقال.
+<br/><br/>
+المشهد ما كانش من أفلام. ما كانش دراما مبكية. كان صعب ومعقد وفيه لحظات صمت وفيه أسئلة وفيه دموع بكت على جنب من أمه — بس كانت دموع فاهمة، مش دموع مصدومة.
+<br/><br/>
+الأب. محمد صبري. وقف أمام طارق.
+<br/><br/>
+الاتنين اتأملوا في بعض. ثلاثين سنة في ثانية.
+<br/><br/>
+<span class="dialogue">— أنا آسف.</span>
+<br/>
+قالها الأب. جملة واحدة. بس فيها كل حاجة.
+<br/><br/>
+<span class="dialogue">— ما فيش داعي لأسف على حاجة إنت ما عرفتهاش.</span>
+<br/>
+طارق قالها بهدوء. هدوء إنسان فكّر في الحاجة دي كتير قبل ما ييجي.
+<br/><br/>
+<span class="part-title">— جزء حاداشر —</span>
+في الليل، الكل انصرف غير أدهم وطارق. قعدوا في الأوضة الكبيرة. الضل خافت. في كوبايتين شاي.
+<br/><br/>
+<span class="dialogue">— إنت بتحب إيه؟</span>
+<br/>
+طارق سأل فجأة.
+<br/><br/>
+<span class="dialogue">— يعني؟</span>
+<br/>
+<span class="dialogue">— بتحب إيه في الحياة. مش الشغل ولا المسؤوليات. حاجة إنت بتحبها.</span>
+<br/><br/>
+أدهم فكر.
+<br/><br/>
+<span class="dialogue">— بحب الموسيقى. وبحب الليالي اللي الجو فيها بارد وبقعد على البلكونة من غير ما أعمل حاجة تانية. وبحب لما بلاقي خط كويس في تصميم — يعني خط في مكانه الصح.</span>
+<br/><br/>
+<span class="dialogue">— أنا بحب الكتب. وبحب لما حد بييجيلي في المكتبة وهو ما عارفش عايز إيه وأنا أختارله حاجة وتعجبه. ده بيديني حاجة.</span>
+<br/><br/>
+<span class="dialogue">— إيه الحاجة؟</span>
+<br/>
+<span class="dialogue">— إن الناس ممكن يتفاهموا حتى لو ما عرفوش بعض.</span>
+<br/><br/>
+<span class="part-title">— جزء اتناشر —</span>
+قبل ما طارق يقوم يمشي، أدهم أخرج شيء من جيبه. ورقة. الجواب.
+<br/><br/>
+<span class="dialogue">— ده بتاعك أنت في الأصل.</span>
+<br/>
+قال أدهم وناوله الجواب.
+<br/><br/>
+طارق أخده وبص فيه. خط أمه. الكلمات بتاعتها. قرأ ببطء.
+<br/><br/>
+لما خلص، حط الجواب على الترابيزة بين الاتنين.
+<br/><br/>
+<span class="dialogue">— أمي كانت شجاعة.</span>
+<br/>
+<span class="dialogue">— شجاعة جداً.</span>
+<br/>
+<span class="dialogue">— وجدك... جدنا... كان بيحاول يصلح حاجة بعد ما اتكسرت.</span>
+<br/>
+<span class="dialogue">— آه. بطريقته. بالطريقة الوحيدة اللي عرفها.</span>
+<br/><br/>
+<span class="part-title">— جزء تالتاشر —</span>
+طارق لما راح، أدهم فضل جالس لوحده. الشقة ساكتة. الجواب لسه على الترابيزة.
+<br/><br/>
+فكر في الجد. الحاج سليمان اللي عاش خمسة وثمانين سنة ومات وسايب وراه سر. بس السر ما كانش من النوع اللي بيتخفى من خيانة — كان من النوع اللي بيتخفى من خوف. خوف من إنه لو الحقيقة اتقالت هيوجع ناس أكتر.
+<br/><br/>
+الجد كان غلط. مش في النية — في الحساب. لأن الحقيقة، لو اتأخرت، ما بتوجعش أقل. بتوجع أكتر وعلى ناس أكتر.
+<br/><br/>
+بس الجد كمان كان بيحاول. كان بيساعد نزهة من غير ما حد يعرف. كان بيشيل تقل الموضوع لوحده. وده كان شكل من أشكال الندم — مش الندم اللي بيتقال بصوت عالي، الندم اللي بيعيشه حد في تصرفاته اليومية.
+<br/><br/>
+<span class="part-title">— جزء أربعتاشر — خاتمة —</span>
+في الصبح الجاي، أدهم راح شقة الجد. مفتاحه لسه معاه.
+<br/><br/>
+الشقة نفسها. الأثاث. الرف. الصور. بس دلوقتي، أدهم بيبص فيها بعيون مختلفة. مش عيون حد بيشيل ذكريات — عيون حد بيفهم الحكاية ورا الذكريات.
+<br/><br/>
+وقف قدام الصورة. الصورة السوداء وبيضا. الجد وهو شاب. والست الواقفة جنبيه — اللي ما كانش أدهم يعرفها.
+<br/><br/>
+دلوقتي عرف.
+<br/><br/>
+دي مش ست مجهولة. دي نزهة. وكانت موجودة في الصورة دي عند الجد طول الوقت. والجد حافظ عليها.
+<br/><br/>
+إيه اللي الإنسان بيشيله طول حياته؟ إيه اللي بيسيبه ورا من غير ما ينتوي؟ ورقة في دراج. صورة على رف. عنوان في كتاب قديم.
+<br/><br/>
+الحياة مش بتتلخص في اللي بيتقال. بتتلخص في اللي بيتسيّب.
+<br/><br/>
+أدهم أخد الصورة من الرف. مشى بيها للشباك. الشمس كانت بتطلع على شبرا. الشارع بيصحى ببطء — عربية خضار بتمشي، حد بيفتح دكانه، كلاكيت باب عمارة قريبة بيتقفل.
+<br/><br/>
+نضر في الصورة مرة أخيرة. الجد. نزهة.
+<br/><br/>
+حطها في جيبه.
+<br/><br/>
+خرج من الشقة. قفل الباب. وقف لحظة في السلم.
+<br/><br/>
+طارق كان رن له الصبح ده. رسالة قصيرة:
+<br/><br/>
+<span class="dialogue">"أنا مبسوط إنك جيتلي."</span>
+<br/><br/>
+أدهم بعتله:
+<br/><br/>
+<span class="dialogue">"أنا برضو."</span>
+<br/><br/>
+وبعدها ثلاث نقط. وبعدها:
+<br/><br/>
+<span class="dialogue">"نروح نتغدى يوم الجمعة؟"</span>
+<br/><br/>
+أدهم ابتسم. أول مرة يبتسم من وهو بدأ الحكاية دي.
+<br/><br/>
+نزل السلم. وخرج على الشارع. والشمس كانت دافية ومش حارة. يوم بيبدأ بيبدأ.
+<br/><br/>
+والورقة الأخيرة كانت اتقرأت.`
+  }
+];
+
+    /* ══════════════════════════════
+       RENDER CHAPTER BUTTONS
+    ══════════════════════════════ */
+    const wrapper = document.getElementById('chaptersButtons');
+    chapters.forEach((ch, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'fall-btn';
+      btn.innerHTML = `<span class="btn-top">
+        <span class="btn-text-wrap">
+          <strong>${ch.title}</strong>
+          <span class="btn-preview">${ch.preview}</span>
+        </span>
+        <span class="btn-num">${i + 1}</span>
+      </span>`;
+      btn.onclick = () => goToChapter(i);
+      wrapper.appendChild(btn);
+    });
+
+    /* ══════════════════════════════
+       AVATAR
+    ══════════════════════════════ */
+    let avatarTimer = null;
+    function toggleAvatarMsg() {
+      const msg = document.getElementById('avatarMsg');
+      msg.classList.add('show');
+      clearTimeout(avatarTimer);
+      avatarTimer = setTimeout(() => msg.classList.remove('show'), 3000);
+    }
+
+    /* ══════════════════════════════
+       VIEW SWITCHING
+    ══════════════════════════════ */
+    function showView(id) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ══════════════════════════════
+       GO TO CHAPTER
+    ══════════════════════════════ */
+    let msgTimer = null;
+
+    function goToChapter(index) {
+      const ch = chapters[index];
+      const msg = document.getElementById('chapterMsg');
+      document.getElementById('chapterMsgText').textContent = ch.preview;
+      msg.classList.add('show');
+      clearTimeout(msgTimer);
+
+      document.getElementById('chapterLabel').textContent = ch.title;
+      document.getElementById('chapterTitle').textContent = ch.title;
+      document.getElementById('chapterContent').innerHTML = ch.content;
+
+      msgTimer = setTimeout(() => {
+        msg.classList.remove('show');
+        stopMusic();
+        showView('view-chapter');
+      }, 800);
+    }
+
+    /* ══════════════════════════════
+       GO BACK
+    ══════════════════════════════ */
+    function goBack() {
+      stopMusic();
+      showView('view-main');
+    }
+
+    /* ══════════════════════════════
+       MUSIC
+    ══════════════════════════════ */
+    const songs = [
+  'https://files.catbox.moe/lxndt.mp3',
+  'https://files.catbox.moe/twmgbl.mp3',
+  'https://files.catbox.moe/6qzo5p.mp3',
+  'https://files.catbox.moe/cw8poa.mp3',
+  'https://files.catbox.moe/hjqj1k.mp3',
+  'https://files.catbox.moe/2bdoc7.mp3',
+  'https://files.catbox.moe/cmzw9j.mp3',
+  'https://files.catbox.moe/1dspxh.mp3',
+  'https://files.catbox.moe/t5xnwb.mp3',
+  'https://files.catbox.moe/aolqiy.mp3'
+];
+
+    let audio = null;
+    let isPlaying = false;
+    let statusTimer = null;
+
+    function showMusicStatus(text) {
+      const el = document.getElementById('musicStatus');
+      el.textContent = text;
+      el.classList.add('show');
+      clearTimeout(statusTimer);
+      statusTimer = setTimeout(() => el.classList.remove('show'), 2500);
+    }
+
+    function getRandom(exclude) {
+      let i;
+      do { i = Math.floor(Math.random() * songs.length); }
+      while (songs.length > 1 && songs[i] === exclude);
+      return songs[i];
+    }
+
+    function stopMusic() {
+      if (audio) { audio.pause(); audio.src = ''; }
+      isPlaying = false;
+      const btn = document.getElementById('musicBtn');
+      if (btn) { btn.textContent = '♪ تشغيل موسيقى'; btn.classList.remove('music-active'); }
+    }
+
+    function handleMusic() {
+      const btn = document.getElementById('musicBtn');
+      if (!isPlaying) {
+        if (!audio) audio = new Audio();
+        audio.src = getRandom(null);
+        audio.play().catch(() => showMusicStatus('⚠️ تعذّر التشغيل'));
+        audio.onended = () => { audio.src = getRandom(audio.src); audio.play(); };
+        isPlaying = true;
+        btn.textContent = '⟳ تغيير الأغنية';
+        btn.classList.add('music-active');
+        showMusicStatus('♪ جاري التشغيل...');
+      } else {
+        const prev = audio.src;
+        audio.src = getRandom(prev);
+        audio.play().catch(() => showMusicStatus('⚠️ تعذّر التشغيل'));
+        showMusicStatus('♪ تم تغيير الأغنية');
+      }
+    }
+  </script>
+</body>
+</html>
